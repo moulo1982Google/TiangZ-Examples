@@ -1,0 +1,53 @@
+syntax = "proto3";
+package battle;
+message WorkerView { string node = 1; bool draining = 2; bool busy = 3; bool live = 4; string logicVersion = 5; string configVersion = 6; }
+
+
+//ResponseType B2C_Submit
+// @ets.msg protocol=Battle method=Submit
+message C2B_Submit // IRequest
+{
+ string battleId = 1; uint32 seed = 2; uint32 rounds = 3; uint32 delayMs = 4;
+ string realmId = 5; string logicVersion = 6; string configVersion = 7;
+}
+message B2C_Submit // IResponse
+{
+ string state = 1;
+}
+
+//ResponseType B2C_Inspect
+// @ets.msg protocol=Battle method=Inspect
+message C2B_Inspect // IRequest
+{
+ string battleId = 1;
+ string realmId = 2;
+}
+message B2C_Inspect // IResponse
+{
+ string state = 1; uint32 result = 2; string node = 3;
+ string realmId = 4; string battleId = 5; string logicVersion = 6; string configVersion = 7;
+}
+
+
+
+//ResponseType B2C_Drain
+// @ets.msg protocol=Battle method=Drain
+message C2B_Drain // IRequest
+{
+ string node = 1;
+}
+message B2C_Drain // IResponse
+{
+ bool idle = 1;
+}
+
+//ResponseType B2C_Overview
+// @ets.msg protocol=Battle method=Overview
+message C2B_Overview // IRequest
+{
+ 
+}
+message B2C_Overview // IResponse
+{
+ uint32 queued = 1; uint32 running = 2; uint32 done = 3; uint32 unknown = 4; repeated WorkerView workers = 5;
+}

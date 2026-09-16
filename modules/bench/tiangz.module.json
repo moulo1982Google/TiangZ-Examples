@@ -1,0 +1,8 @@
+{
+  "formatVersion": 1,
+  "id": "org.tiangz.bench",
+  "version": "0.6.0-alpha.0",
+  "engine": { "minVersion": "0.6.0-alpha.0", "maxVersionExclusive": "0.7.0" },
+  "dependencies": [{ "id": "org.tiangz.mmorpg", "minVersion": "0.6.0-alpha.0", "maxVersionExclusive": "0.7.0" }],
+  "entries": { "model": "src/model/index.ts", "hotfix": "src/hotfix/index.ts" }
+}

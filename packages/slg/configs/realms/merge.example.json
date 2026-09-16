@@ -1,0 +1,9 @@
+{
+  "formatVersion": 2,
+  "tenantId": "slg.dev",
+  "operationId": "merge-s1-s2-into-s100",
+  "sourceRealmIds": ["s1", "s2"],
+  "targetRealmId": "s100",
+  "policyId": "org.tiangz.slg.realm-rebuild",
+  "unresolvedDomains": ["march-settlement", "character-assets", "alliance", "world-entry-placement"]
+}

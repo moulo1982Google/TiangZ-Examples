@@ -1,0 +1,10 @@
+{
+  "formatVersion": 1,
+  "moduleId": "org.tiangz.mmorpg",
+  "target": "server",
+  "schemaFingerprint": "05aa5cdaaf6c23e94862fe7b17fa59539a8c6768714bbaf9cd12dd4f15574430",
+  "dataFingerprint": "3b2e08e52e3fb5257148524303ad6ad492797e3e85399c65a41064a849ec4f62",
+  "sourceFingerprint": "964de2d49d7af19ac0351e7e1f9b6c9704df07a96e529c857599aca4e5199373",
+  "dataFile": "server.json",
+  "dataHash": "3b2e08e52e3fb5257148524303ad6ad492797e3e85399c65a41064a849ec4f62"
+}

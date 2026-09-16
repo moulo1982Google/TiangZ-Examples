@@ -1,0 +1,49 @@
+{
+  "formatVersion": 1,
+  "sdkTargets": [
+    {
+      "language": "typescript",
+      "output": "clients/cocos_client2D_3.8.6/assets/scripts/Generated/SDK",
+      "source": "client_sdk/typescript"
+    },
+    {
+      "language": "typescript",
+      "output": "clients/cocos_client3D_3.8.8/assets/scripts/Generated/SDK",
+      "source": "client_sdk/typescript"
+    },
+    {
+      "language": "typescript",
+      "output": "clients/pixi_client_8.19.0/src/Generated/SDK",
+      "source": "client_sdk/typescript"
+    },
+    {
+      "language": "cpp",
+      "output": "clients/ue_client3D_5.4.4/TiangZClientUE/Plugins/TiangZClientSDK/Source/ThirdParty/TiangZClientSDK/include",
+      "source": "client_sdk/cpp/include"
+    },
+    {
+      "language": "csharp",
+      "output": "clients/Unity2022.3.62f3c1_demo/Assets/TiangZClient/Runtime",
+      "source": "client_sdk/csharp"
+    },
+    {
+      "language": "godot",
+      "output": "clients/godot-3d-4.7.1/scripts/generated",
+      "source": "client_sdk/godot/generated"
+    }
+  ],
+  "handlerTargets": [
+    {
+      "source": "clients/cocos_client2D_3.8.6/assets/scripts",
+      "output": "clients/cocos_client2D_3.8.6/assets/scripts/Generated/Hotfix/handlers.ts"
+    },
+    {
+      "source": "clients/cocos_client3D_3.8.8/assets/scripts",
+      "output": "clients/cocos_client3D_3.8.8/assets/scripts/Generated/Hotfix/handlers.ts"
+    },
+    {
+      "source": "clients/pixi_client_8.19.0/src",
+      "output": "clients/pixi_client_8.19.0/src/Generated/Hotfix/handlers.ts"
+    }
+  ]
+}

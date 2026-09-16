@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "key": "proto/Battle_C_42000.proto#B2C_Drain",
+      "name": "B2C_Drain",
+      "code": 42012
+    },
+    {
+      "key": "proto/Battle_C_42000.proto#B2C_Execute",
+      "name": "B2C_Execute",
+      "code": 42008
+    },
+    {
+      "key": "proto/Battle_C_42000.proto#B2C_Inspect",
+      "name": "B2C_Inspect",
+      "code": 42006
+    },
+    {
+      "key": "proto/Battle_C_42000.proto#B2C_Overview",
+      "name": "B2C_Overview",
+      "code": 42014
+    },
+    {
+      "key": "proto/Battle_C_42000.proto#B2C_Poll",
+      "name": "B2C_Poll",
+      "code": 42010
+    },
+    {
+      "key": "proto/Battle_C_42000.proto#B2C_Register",
+      "name": "B2C_Register",
+      "code": 42002
+    },
+    {
+      "key": "proto/Battle_C_42000.proto#B2C_Submit",
+      "name": "B2C_Submit",
+      "code": 42004
+    },
+    {
+      "key": "proto/Battle_C_42000.proto#C2B_Drain",
+      "name": "C2B_Drain",
+      "code": 42011
+    },
+    {
+      "key": "proto/Battle_C_42000.proto#C2B_Execute",
+      "name": "C2B_Execute",
+      "code": 42007
+    },
+    {
+      "key": "proto/Battle_C_42000.proto#C2B_Inspect",
+      "name": "C2B_Inspect",
+      "code": 42005
+    },
+    {
+      "key": "proto/Battle_C_42000.proto#C2B_Overview",
+      "name": "C2B_Overview",
+      "code": 42013
+    },
+    {
+      "key": "proto/Battle_C_42000.proto#C2B_Poll",
+      "name": "C2B_Poll",
+      "code": 42009
+    },
+    {
+      "key": "proto/Battle_C_42000.proto#C2B_Register",
+      "name": "C2B_Register",
+      "code": 42001
+    },
+    {
+      "key": "proto/Battle_C_42000.proto#C2B_Submit",
+      "name": "C2B_Submit",
+      "code": 42003
+    },
+    {
+      "key": "proto/Battle_S_24000.proto#B2C_DrainHost",
+      "name": "B2C_DrainHost",
+      "code": 24008
+    },
+    {
+      "key": "proto/Battle_S_24000.proto#B2C_Execute",
+      "name": "B2C_Execute",
+      "code": 24004
+    },
+    {
+      "key": "proto/Battle_S_24000.proto#B2C_Poll",
+      "name": "B2C_Poll",
+      "code": 24006
+    },
+    {
+      "key": "proto/Battle_S_24000.proto#B2C_Register",
+      "name": "B2C_Register",
+      "code": 24002
+    },
+    {
+      "key": "proto/Battle_S_24000.proto#C2B_DrainHost",
+      "name": "C2B_DrainHost",
+      "code": 24007
+    },
+    {
+      "key": "proto/Battle_S_24000.proto#C2B_Execute",
+      "name": "C2B_Execute",
+      "code": 24003
+    },
+    {
+      "key": "proto/Battle_S_24000.proto#C2B_Poll",
+      "name": "C2B_Poll",
+      "code": 24005
+    },
+    {
+      "key": "proto/Battle_S_24000.proto#C2B_Register",
+      "name": "C2B_Register",
+      "code": 24001
+    }
+  ]
+}

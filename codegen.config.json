@@ -1,0 +1,7 @@
+{
+  "csharpClientSdk": {
+    "enabled": true,
+    "sourceRoot": "client_sdk/csharp",
+    "outputRoots": []
+  }
+}

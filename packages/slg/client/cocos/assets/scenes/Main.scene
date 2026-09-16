@@ -1,0 +1,23 @@
+[
+  { "__type__": "cc.SceneAsset", "_name": "Main", "_objFlags": 0, "_native": "", "scene": { "__id__": 1 } },
+  {
+    "__type__": "cc.Scene", "_name": "Main", "_objFlags": 0,
+    "_parent": null, "_children": [{ "__id__": 2 }], "_active": true,
+    "_components": [], "_prefab": null, "autoReleaseAssets": false,
+    "_id": "23aeb321-d8b4-497b-8652-b31fb8a14513"
+  },
+  {
+    "__type__": "cc.Node", "_name": "SLG", "_objFlags": 0,
+    "_parent": { "__id__": 1 }, "_children": [], "_active": true,
+    "_components": [{ "__id__": 3 }], "_prefab": null,
+    "_lpos": { "__type__": "cc.Vec3", "x": 0, "y": 0, "z": 0 },
+    "_lrot": { "__type__": "cc.Quat", "x": 0, "y": 0, "z": 0, "w": 1 },
+    "_lscale": { "__type__": "cc.Vec3", "x": 1, "y": 1, "z": 1 },
+    "_layer": 1073741824, "_id": "slg-bootstrap-node"
+  },
+  {
+    "__type__": "98facepkUNMkK0ZCqGBzD+I", "_name": "", "_objFlags": 0,
+    "node": { "__id__": 2 }, "_enabled": true, "__prefab": null,
+    "serverHost": "127.0.0.1", "serverPort": 18001, "_id": "slg-bootstrap-component"
+  }
+]

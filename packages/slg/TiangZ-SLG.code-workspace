@@ -1,0 +1,7 @@
+{
+  "folders": [{ "name": "SLG 游戏", "path": "." }],
+  "settings": {
+    "files.exclude": { "**/library": true, "**/temp": true },
+    "search.exclude": { "**/Generated": true, "**/generated": true, "dist": true }
+  }
+}

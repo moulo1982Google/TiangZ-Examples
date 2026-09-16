@@ -1,0 +1,22 @@
+{
+  "process": {
+    "name": "slg-dev",
+    "identity": { "originServerId": 41, "workerId": 0 },
+    "persistence": {
+      "dbProxy": {
+        "endpoint": "127.0.0.1:18700",
+        "authTokenEnv": "TIANGZ_DBPROXY_AUTH_TOKEN",
+        "clientPoolSize": 2,
+        "connectTimeoutMs": 5000,
+        "requestTimeoutMs": 5000,
+        "maxFrameBytes": 8388608
+      }
+    },
+    "logging": { "level": "info", "format": "pretty", "console": true },
+    "game": { "fixedUpdateMs": 50, "maxCatchUpSteps": 2 },
+    "observability": { "health": { "ip": "127.0.0.1", "port": 18600 } }
+  },
+  "scenes": [
+    { "name": "slg_world", "sceneType": "SlgWorld", "ip": "127.0.0.1", "port": 18001, "protocol": "websocket", "audience": "outer" }
+  ]
+}

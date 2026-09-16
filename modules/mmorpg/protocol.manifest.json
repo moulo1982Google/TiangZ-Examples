@@ -1,0 +1,32 @@
+{
+  "formatVersion": 1,
+  "module": {
+    "id": "org.tiangz.mmorpg",
+    "version": "0.6.0-alpha.0"
+  },
+  "source": "proto",
+  "protoFiles": [
+    "proto/BenchInner_S_25001.proto",
+    "proto/BenchMessage_C_15001.proto",
+    "proto/DataDefine_CS_50001.proto",
+    "proto/InnerMessage_S_20001.proto",
+    "proto/OuterMessage_C_10001.proto"
+  ],
+  "locks": {
+    "opcode": {
+      "path": "proto/opcode.lock.json",
+      "sha256": "afcc441773c77967d9630f2e0af05d209da72a4a1e0ff74dac9476605f1ba5de",
+      "entries": 208
+    },
+    "schema": {
+      "path": "proto/schema.lock.json",
+      "sha256": "2f56775c58b914bc345a348dece734cba13260b995458c60e3e4c9fd342a87fb",
+      "entries": 245
+    }
+  },
+  "outputs": {
+    "server": "src/model/generated/server",
+    "serverIndex": "src/model/generated/server/index.ts",
+    "typescript": "generated/typescript"
+  }
+}

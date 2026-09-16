@@ -1,0 +1,62 @@
+name: tiangz-slg-dbproxy
+
+services:
+  postgres:
+    image: postgres:18.4-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: slg
+      POSTGRES_DB: slg
+      POSTGRES_PASSWORD: ${SLG_POSTGRES_PASSWORD:?Run npm run dbproxy:up}
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    mem_limit: 1g
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U slg -d slg"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:8.8.1-trixie
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: ${SLG_REDIS_PASSWORD:?Run npm run dbproxy:up}
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec", "--maxmemory", "256mb", "--maxmemory-policy", "noeviction", "--requirepass", "${SLG_REDIS_PASSWORD}"]
+    volumes:
+      - redis-data:/data
+    mem_limit: 384m
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=\"$${REDIS_PASSWORD}\" redis-cli ping | grep -q PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  dbproxy:
+    build:
+      context: ../../../../../TiangZ-DBProxy
+      dockerfile: Dockerfile.dev
+    image: tiangz-slg-dbproxy:dev
+    restart: unless-stopped
+    stop_grace_period: 15s
+    environment:
+      DBPROXY_AUTH_TOKEN: ${SLG_DBPROXY_AUTH_TOKEN:?Run npm run dbproxy:up}
+      DBPROXY_POSTGRES_URL: postgres://slg:${SLG_POSTGRES_PASSWORD}@postgres:5432/slg
+      DBPROXY_REDIS_URL: redis://:${SLG_REDIS_PASSWORD}@redis:6379/0
+      RUST_LOG: info
+    ports:
+      - "127.0.0.1:18700:7800"
+      - "127.0.0.1:18900:9090"
+    volumes:
+      - ./config.json:/app/config.json:ro
+    command: ["--config", "/app/config.json"]
+    mem_limit: 512m
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  redis-data:

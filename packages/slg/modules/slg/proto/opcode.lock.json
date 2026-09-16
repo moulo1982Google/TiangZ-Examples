@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "key": "proto/Slg_C_32000.proto#C2S_WorldSnapshot",
+      "name": "C2S_WorldSnapshot",
+      "code": 32001
+    },
+    {
+      "key": "proto/Slg_C_32000.proto#S2C_WorldSnapshot",
+      "name": "S2C_WorldSnapshot",
+      "code": 32002
+    }
+  ]
+}

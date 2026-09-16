@@ -1,0 +1,8 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    { "label": "SLG: 启动服务端", "type": "shell", "command": "npm run dev", "windows": { "command": "npm.cmd run dev" }, "problemMatcher": [], "isBackground": true },
+    { "label": "SLG: 完整检查", "type": "shell", "command": "npm run check", "windows": { "command": "npm.cmd run check" }, "problemMatcher": [] },
+    { "label": "SLG: 打开 Cocos", "type": "shell", "command": "npm run client:open", "windows": { "command": "npm.cmd run client:open" }, "problemMatcher": [] }
+  ]
+}

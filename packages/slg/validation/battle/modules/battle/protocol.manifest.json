@@ -1,0 +1,29 @@
+{
+  "formatVersion": 1,
+  "module": {
+    "id": "org.tiangz.slg.battlelab",
+    "version": "0.1.0"
+  },
+  "source": "proto",
+  "protoFiles": [
+    "proto/Battle_C_42000.proto",
+    "proto/Battle_S_24000.proto"
+  ],
+  "locks": {
+    "opcode": {
+      "path": "proto/opcode.lock.json",
+      "sha256": "9852c1e2be38b468b15afdfb213fd121fa31d249091928f765be4f82cca316c4",
+      "entries": 22
+    },
+    "schema": {
+      "path": "proto/schema.lock.json",
+      "sha256": "3d46326147108c72445898b452817f3f8abc8e7a2a3af7b1256f3eb49b559063",
+      "entries": 23
+    }
+  },
+  "outputs": {
+    "server": "src/model/generated/protocol",
+    "serverIndex": "src/model/generated/protocol/index.ts",
+    "typescript": "generated/typescript"
+  }
+}

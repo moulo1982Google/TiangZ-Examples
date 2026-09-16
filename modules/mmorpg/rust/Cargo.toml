@@ -1,0 +1,21 @@
+[package]
+name = "tiangz_mmorpg_native"
+version = "0.6.0-alpha.0"
+edition = "2024"
+license = "Apache-2.0"
+
+[dependencies]
+mimalloc = { version = "0.1.52", optional = true }
+deno_core = "0.411"
+deno_error = "0.7.1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rustc-hash = "2"
+tiangz_transport = { package = "TiangZ", path = "../../../../TiangZ", default-features = false }
+
+[dev-dependencies]
+tempfile = "3"
+
+[features]
+default = ["mimalloc-allocator"]
+mimalloc-allocator = ["dep:mimalloc"]

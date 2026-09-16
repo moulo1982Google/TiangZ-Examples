@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "experimentalDecorators": true,
+    "useDefineForClassFields": true,
+    "skipLibCheck": true,
+    "paths": {
+      "#tiangz/core": [
+        "../../../../../../../TiangZ/app/core/public.ts"
+      ],
+      "#tiangz/domains": [
+        "../../../../../../../TiangZ/app/model/domains/public.ts"
+      ],
+      "#tiangz/model": [
+        "../../../../../../../TiangZ/app/model/public.ts"
+      ],
+      "#tiangz/module": [
+        "./src/model/index.ts"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*.ts"
+  ]
+}

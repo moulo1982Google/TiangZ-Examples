@@ -1,0 +1,13 @@
+{
+  "name": "tiangz-example-mmorpg",
+  "version": "0.6.0-alpha.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "setup": "node tools/workspace.mjs setup",
+    "build": "node tools/workspace.mjs build",
+    "check": "node tools/workspace.mjs check",
+    "start": "node tools/workspace.mjs start",
+    "smoke": "node tools/workspace.mjs smoke"
+  }
+}

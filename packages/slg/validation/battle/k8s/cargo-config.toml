@@ -1,0 +1,6 @@
+# 本地集成实验使用同工作区的 DBProxy SDK 源码，不连接或启动 DBProxy。
+# 正式发布应固定已发布依赖修订；此配置只复制进临时镜像构建目录。
+[patch."https://github.com/moulo1982Google/TiangZ-DBProxy.git"]
+tiangz-dbproxy-client = { path = "../TiangZ-DBProxy/crates/dbproxy-client" }
+tiangz-dbproxy-core = { path = "../TiangZ-DBProxy/crates/dbproxy-core" }
+tiangz-dbproxy-protocol = { path = "../TiangZ-DBProxy/crates/dbproxy-protocol" }

@@ -1,0 +1,15 @@
+# 独立本地练习；不映射游戏端口到宿主，不连接既有数据库。
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+networking:
+  apiServerAddress: "127.0.0.1"
+nodes:
+  - role: control-plane
+    # Docker Desktop 首次解包较慢；延长初始化等待，不关闭健康检查。
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        apiVersion: kubeadm.k8s.io/v1beta4
+        timeouts:
+          kubernetesAPICall: 8m0s
+          controlPlaneComponentHealthCheck: 8m0s

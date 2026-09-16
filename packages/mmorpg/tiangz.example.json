@@ -1,0 +1,6 @@
+{
+  "formatVersion": 1,
+  "name": "mmorpg",
+  "entry": "tools/workspace.mjs",
+  "actions": ["setup", "build", "check", "start", "smoke"]
+}

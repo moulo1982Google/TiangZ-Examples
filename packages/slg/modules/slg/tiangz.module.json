@@ -1,0 +1,24 @@
+{
+  "formatVersion": 1,
+  "id": "org.tiangz.slg",
+  "version": "0.1.0",
+  "description": "org.tiangz.slg external game module.",
+  "engine": {
+    "minVersion": "0.6.0-alpha.0",
+    "maxVersionExclusive": "0.7.0"
+  },
+  "dependencies": [],
+  "capabilities": ["slg.world-preview"],
+  "entries": {
+    "model": "src/model/index.ts",
+    "hotfix": "src/hotfix/index.ts"
+  },
+  "protocol": {
+    "generateGodot": false,
+    "source": "proto",
+    "opcodeLock": "proto/opcode.lock.json",
+    "schemaLock": "proto/schema.lock.json",
+    "serverOutput": "src/model/generated/protocol",
+    "typescriptOutput": "generated/typescript"
+  }
+}

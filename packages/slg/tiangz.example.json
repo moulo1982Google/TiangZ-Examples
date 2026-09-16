@@ -1,0 +1,6 @@
+{
+  "formatVersion": 1,
+  "name": "slg",
+  "entry": "tools/workspace.mjs",
+  "actions": ["setup", "build", "check", "start", "dev", "smoke", "client-open", "client-build"]
+}

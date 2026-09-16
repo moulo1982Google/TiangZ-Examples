@@ -1,0 +1,9 @@
+{
+  "formatVersion": 2,
+  "tenantId": "slg.dev",
+  "realms": [
+    { "id": "s1", "originServerId": 41, "state": "active", "realmGeneration": 1 },
+    { "id": "s2", "originServerId": 42, "state": "active", "realmGeneration": 1 },
+    { "id": "s100", "originServerId": 100, "state": "prepared", "realmGeneration": 2 }
+  ]
+}

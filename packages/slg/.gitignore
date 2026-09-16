@@ -1,0 +1,15 @@
+node_modules/
+dist/
+logs/
+.env
+client/cocos/library/
+client/cocos/temp/
+client/cocos/local/
+client/cocos/profiles/
+client/cocos/build/
+client/cocos/native/
+client/cocos/assets/scripts/Generated/
+client/cocos/assets/scripts/Generated.meta
+modules/*/generated/
+modules/*/src/model/generated/
+modules/*/protocol.manifest.json

@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "hashAlgorithm": "sha256-normalized-text-v1",
+  "generators": {
+    "csharp-client-sdk": {
+      "command": "npm run codegen:csharp-client-sdk",
+      "implementationFingerprint": "3821d68ef1d1dda4b989134be4c4db98b41bb4be267519e1fa880606c77c07d1",
+      "contentInputs": {
+        "client_sdk/csharp/Core/Binary.cs": "e62e3dd8b4bb4b51ec425fa018e258e354d4c80ef3da0d2c0502eed5a2a96b79",
+        "client_sdk/csharp/Core/Frame.cs": "f8f068d2dd1ff91b70112be2e538c00be9f5e60ca2a7a43e8161e74b15d7a522",
+        "client_sdk/csharp/Core/Protocol.cs": "239d8654884f3aeebdea12a9b895d10f2b18eb1023c8d4b939db4efe81e61642",
+        "client_sdk/csharp/Core/RpcSocket.cs": "d813c8c6ead3fdf400c23c52e10a967cc739f07d3ee3a01815ad1c264a200ac8",
+        "client_sdk/csharp/Demo/LoginFlow.cs": "5107a12a5700c658d132f4be4fd6274e59bf1b134b032c6238eaec5d57a6c18d",
+        "client_sdk/csharp/Generated/Demo/Protocol.cs": "5775daa78d6959f0aac480aa24c781d2ce70ea55f55d746cb8e7fc6aa7946372",
+        "codegen.config.json": "2463480561292fad446cd07137e915cb12041bdd5983b45314fd3779b5c0643b",
+        "modules/mmorpg/proto/DataDefine_CS_50001.proto": "256c1a2b893ccdb9b880c2e29b0d51bc58cf72e7dfb364ebd35d71c4450f98fb",
+        "modules/mmorpg/proto/opcode.lock.json": "afcc441773c77967d9630f2e0af05d209da72a4a1e0ff74dac9476605f1ba5de",
+        "modules/mmorpg/proto/OuterMessage_C_10001.proto": "272062a7b02eabb926a900dbe1efea0e64934943b7cc72ac8246de956251e886",
+        "modules/mmorpg/proto/schema.lock.json": "2f56775c58b914bc345a348dece734cba13260b995458c60e3e4c9fd342a87fb",
+        "tools/codegen_csharp_client_sdk.mjs": "0da8905d6251ec561468dd1b42f32e54f51bb4dbb8a55fd5cb90508fe00291e4"
+      },
+      "selections": [],
+      "outputs": {},
+      "outputRoots": []
+    }
+  }
+}

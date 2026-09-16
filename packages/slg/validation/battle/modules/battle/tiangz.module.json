@@ -1,0 +1,24 @@
+{
+  "formatVersion": 1,
+  "id": "org.tiangz.slg.battlelab",
+  "version": "0.1.0",
+  "description": "org.tiangz.slg.battlelab external game module.",
+  "engine": {
+    "minVersion": "0.6.0-alpha.0",
+    "maxVersionExclusive": "0.7.0"
+  },
+  "dependencies": [],
+  "capabilities": ["slg.battle-validation"],
+  "protocol": { "source": "proto", "generateGodot": false },
+  "native": {
+    "source": "native",
+    "crate": "rust",
+    "crateName": "tiangz_org_tiangz_slg_battlelab_native",
+    "generatedRust": "rust/src/generated",
+    "generatedTypeScript": "src/model/generated/native"
+  },
+  "entries": {
+    "model": "src/model/index.ts",
+    "hotfix": "src/hotfix/index.ts"
+  }
+}

@@ -1,0 +1,7 @@
+[package]
+name = "tiangz_org_tiangz_slg_battlelab_native"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+deno_core = "^0.411"

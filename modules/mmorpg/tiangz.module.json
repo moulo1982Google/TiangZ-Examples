@@ -1,0 +1,27 @@
+{
+  "formatVersion": 1,
+  "id": "org.tiangz.mmorpg",
+  "version": "0.6.0-alpha.0",
+  "description": "Reusable MMORPG scenes, entities, protocols and native data; not part of the engine.",
+  "engine": { "minVersion": "0.6.0-alpha.0", "maxVersionExclusive": "0.7.0" },
+  "dependencies": [],
+  "capabilities": ["game.mmorpg"],
+  "entries": { "model": "src/model/index.ts", "hotfix": "src/hotfix/index.ts" },
+  "publicApi": "src/model/public.ts",
+  "protocol": {
+    "source": "proto", "opcodeLock": "proto/opcode.lock.json", "schemaLock": "proto/schema.lock.json",
+    "serverOutput": "src/model/generated/server", "typescriptOutput": "generated/typescript",
+    "godotOutput": "generated/godot", "godotClassName": "TiangZProto", "generateGodot": false
+  },
+  "gameConfig": {
+    "project": "game_config/luban.conf", "target": "server",
+    "generatedCode": "src/model/generated/config", "generatedData": "game_config/generated",
+    "validator": "src/model/config/ValidateConfig.ts",
+    "client": { "target": "client", "generatedCode": "generated/client/config", "generatedData": "generated/client/data" }
+  },
+  "native": {
+    "source": "native", "crate": "rust", "crateName": "tiangz_mmorpg_native",
+    "generatedRust": "rust/src/generated", "generatedTypeScript": "src/model/generated/native",
+    "configureProjectRoot": true
+  }
+}

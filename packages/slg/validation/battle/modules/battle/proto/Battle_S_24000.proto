@@ -1,0 +1,49 @@
+syntax = "proto3";
+package battle;
+
+//ResponseType B2C_Register
+// @ets.msg protocol=Battle method=Register
+message C2B_Register // IRequest
+{
+ string node = 1; uint32 port = 2; string ip = 3;
+ string logicVersion = 4; string configVersion = 5;
+}
+message B2C_Register // IResponse
+{
+ bool accepted = 1;
+}
+
+//ResponseType B2C_Execute
+// @ets.msg protocol=Battle method=Execute
+message C2B_Execute // IRequest
+{
+ string battleId = 1; uint32 seed = 2; uint32 rounds = 3; uint32 delayMs = 4;
+ string realmId = 5; string logicVersion = 6; string configVersion = 7;
+}
+message B2C_Execute // IResponse
+{
+ bool accepted = 1;
+}
+
+//ResponseType B2C_Poll
+// @ets.msg protocol=Battle method=Poll
+message C2B_Poll // IRequest
+{
+ string battleId = 1;
+ string realmId = 2;
+}
+message B2C_Poll // IResponse
+{
+ string state = 1; uint32 result = 2;
+}
+
+//ResponseType B2C_DrainHost
+// @ets.msg protocol=Battle method=DrainHost
+message C2B_DrainHost // IRequest
+{
+ string node = 1;
+}
+message B2C_DrainHost // IResponse
+{
+ bool idle = 1;
+}

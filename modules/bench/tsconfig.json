@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "experimentalDecorators": true,
+    "useDefineForClassFields": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "paths": {
+      "#tiangz/core": [
+        "../../../TiangZ/app/core/public.ts"
+      ],
+      "#tiangz/domains": [
+        "../../../TiangZ/app/model/domains/public.ts"
+      ],
+      "#tiangz/model": [
+        "../../../TiangZ/app/model/public.ts"
+      ],
+      "#tiangz/module": [
+        "./src/model/index.ts"
+      ],
+      "#tiangz/modules/org.tiangz.mmorpg": [
+        "../mmorpg/src/model/public.ts"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*.ts"
+  ]
+}

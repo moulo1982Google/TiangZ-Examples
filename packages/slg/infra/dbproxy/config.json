@@ -1,0 +1,29 @@
+{
+  "$schema": "../../../../../TiangZ-DBProxy/configs/dbproxy.schema.json",
+  "configVersion": 1,
+  "server": {
+    "listenAddr": "0.0.0.0:7800",
+    "authTokenEnv": "DBPROXY_AUTH_TOKEN",
+    "maxFrameBytes": 8388608,
+    "maxPayloadBytes": 1048576,
+    "handshakeTimeoutMs": 5000,
+    "shutdownGraceMs": 5000
+  },
+  "runtime": { "workerThreads": 2 },
+  "storage": {
+    "backend": "postgresRedis",
+    "postgresUrlEnv": "DBPROXY_POSTGRES_URL",
+    "redisUrlEnv": "DBPROXY_REDIS_URL",
+    "shards": 2,
+    "cacheFallbackConcurrency": 8,
+    "cacheFallbackTimeoutMs": 2000,
+    "cacheOperationTimeoutMs": 200,
+    "postgresConnectionWaitTimeoutMs": 2000,
+    "postgresReconnectCooldownMs": 500
+  },
+  "backlog": { "workers": 1, "leaseMs": 30000, "idleDelayMs": 20, "failureDelayMs": 1000 },
+  "cacheRepair": { "workers": 1, "leaseMs": 30000, "idleDelayMs": 250, "baseRetryDelayMs": 1000, "maxRetryDelayMs": 60000, "maxAttempts": 20 },
+  "outbox": { "workers": 1, "leaseMs": 30000, "idleDelayMs": 250, "baseRetryDelayMs": 1000, "maxRetryDelayMs": 60000, "maxAttempts": 20 },
+  "logging": { "filterEnv": "RUST_LOG", "defaultFilter": "info" },
+  "observability": { "listenAddr": "0.0.0.0:9090", "allowNonLoopback": true }
+}
