@@ -1,10 +1,12 @@
 # TiangZ SLG
 
+玩家驻留默认 5 分钟、切前台快照恢复、独立操作回执及离线任务已接入，配置与复测入口见 [驻留和前台恢复](docs/player-residency-and-foreground.md)。仍是单世界无鉴权 Demo，不是正式登录系统。
+
 Examples 中的独立示例包：TiangZ 扩展模块 + Cocos Creator 3.8.8 TypeScript 前端。服务端、客户端和输出都留在本包，不依赖 MMORPG。
 
 从 Examples 根目录可执行 `npm run build -- --package slg`、`npm run check -- --package slg`、`npm run smoke -- --package slg`；以下不带包名的命令均在本目录运行。旧 TiangZ-SLG 目录已迁入这里，Creator 需重新打开本目录下的 client/cocos，VS Code 工作区使用本目录的 TiangZ-SLG.code-workspace。
 
-当前实现是**只读联调底座**：真实 WebSocket → 模块生成的强类型 RPC → SlgWorld Scene → 城池/资源点快照。不是完整游戏；账号、派兵、采集、返程入账和 DBProxy 持久化还未实现。
+当前已有**基础玩法 Demo**：建筑升级、每分钟 100 粮食、抽武将与升级、派兵占领中立地块。通过真实 WebSocket 和生成 SDK 调用；玩家与世界分记录，接入 DBProxy 原子提交。玩法规则、代码导读、复测步骤及未验证边界见 [基础玩法说明](docs/gameplay-demo.md)。不是完整游戏，尚无账号鉴权或独立 PlayerHost。
 
 ## 立即开始
 
@@ -25,11 +27,15 @@ npm.cmd run dev
 npm.cmd run client:open
 ```
 
-也可以直接在 Creator 中导入 `client/cocos`。打开 `assets/scenes/Main.scene`，点击预览。画面会连接 `127.0.0.1:18001`，显示城池、林地、农田、矿场，点击名称查看信息；失败时显示错误，可点击“连接 / 刷新世界”重试。当前以桌面 Web 预览为验收入口，不声明 Native 发布已验证。
+也可以直接在 Creator 中导入 `client/cocos`。打开 `assets/scenes/Main.scene`，点击预览。画面连接 `127.0.0.1:18001`；上方升级建筑、选择武将，下方抽卡/升级/征兵，点击资源地块后出征。界面显示粮食、士兵和存储模式。本轮新增 UI 尚未实际预览验收，类型与打包检查不能代替画面验收。
 
 注意：手机客户端看到的 `127.0.0.1` 是手机自身。本机开发默认只监听回环；暂未开放远程游戏访问。
 
 ## 常用命令
+
+下一轮以SLG验收默认PG读取、驻留/冷恢复和故障后的资产一致性：[SLG权威读取验收计划](docs/authoritative-read-acceptance.md)。文档区分现有7项强杀脚本与待补的新用例，目前不是一键全覆盖，也尚未执行联合验收。
+
+真实存储的小规模游戏强杀恢复测试见 [恢复测试说明](docs/recovery-test.md)，`npm run test:recovery` 默认仅计划。运行需明确授权，只操作新建隔离环境，不动当前开发库。
 
 本地到 CI 的交付入口与换机接续：[交付脚本与换机指南](docs/delivery-handoff.md)。先用 `npm run delivery -- check`，真实进程用 `local`，隔离容器用 `container`；加 `--plan` 只看步骤。
 
@@ -48,7 +54,8 @@ npm.cmd run client:open
 | `npm run check` | 检查模块、协议产物、SDK 一致性、连接层 TS 和 Cocos 打包；不修复源码或锁 |
 | `npm run build` | 完整生成、检查并构建，不启动 |
 | `npm start` | 检查后启动上次构建；改源码请用 dev/build |
-| `npm run smoke` | 临时目录、随机端口、不连接数据库，真实 RPC 检查地图并正常停机；需先 build |
+| `npm run test:gameplay` | 29 条规则、模拟持久事务和前台恢复测试，不启动数据库 |
+| `npm run smoke` | 临时目录、随机端口、不连接数据库，真实 RPC 验证地图、升级、抽卡和行军占领并正常停机；需先 build |
 | `npm run protocol:update` | **显式**分配/更新模块协议锁，并生成 SDK；审查 Proto 和锁的 diff 后提交 |
 | `npm run client:build` | 调用本机 Creator 构建 Web Desktop |
 | `npm run client:preview` | 本机预览已构建客户端：127.0.0.1:19080 |
@@ -76,6 +83,8 @@ docs/                              架构边界、开发流程与验收说明
 
 ## 当前限制
 
+2026-09-17：DBProxy配置将`slg.demo.player.v1`和`slg.demo.world.v1`设为权威PG读取，避免恢复被旧缓存/负缓存误导。启用前须重新构建DBProxy镜像；旧二进制会拒绝新字段。本次没有重启现有开发容器。当前驻留命中不再逐请求Load，冷加载和启动任务索引恢复仍受存储成本影响；不能把32玩家Demo当正式SLG登录容量模型。详见[权威读取与验收边界](../../../TiangZ-DBProxy/docs/authoritative-recovery-reads.md)及[驻留实现](docs/player-residency-and-foreground.md)。
+
 分服/合服规划使用 `npm run realm:plan`：两个逻辑服合入新世界，地块重新争夺，不导入旧占领。此命令只读、不启动进程、不改库；只有带指纹和前置条件的计划，不具备正式合服执行能力。
 
 这里是 SLG 的设计声明，不是已完成的合服 Demo。三份手写输入分别是 configs/realms/catalog.example.json（有哪些服）、merge.example.json（这次合哪些服）、modules/slg/policies/realm-merge.json（SLG 如何处理数据）。输出 JSON 是生成的计划，不手改。通用宿主只校验并呈现策略，不决定地块重建，也不执行策略。
@@ -84,10 +93,12 @@ docs/                              架构边界、开发流程与验收说明
 
 当前使用纯模块宿主，构建清单仅包含 org.tiangz.slg，不混入 MMORPG 或 Bench。
 
-- 没有账号鉴权，仅开发用公开只读地图；不应开放公网。
-- 地点是 Hotfix 中的起步示例，后续接模块 Luban 表；独立 DBProxy 已配置，游戏进程从本地密钥文件读取认证令牌，但玩家/行军存档业务尚未实现。
-- 没有 PlayerHost、地图分区、跨区行军或事务入账；详见 docs/architecture.md 的下一步边界。
+- 没有账号鉴权，开发玩家名由客户端提供；不应开放公网。当前固定 realm-41，最多 32 个玩家，不支持同玩家多标签并发操作。
+- 地点与玩法数值暂在 Hotfix，尚未接模块 Luban 表。玩家/世界事务存档的小规模真实存储强杀结果见 docs/recovery-test.md，不代表DBProxy自身故障或长稳已验收。
+- 没有独立 PlayerHost、地图分区、跨区行军或 Rust 战斗服务持久结算；建筑等级暂不增加产量。详见 docs/gameplay-demo.md。
 - 未安装/导入 Creator 时，check 只验证连接层类型和前端打包，不等同于 Cocos API 完整类型检查或画面验收。
 - 首次 Rust 冷构建可能较慢；后续 Rust 未改时复用缓存，游戏产物不写入宿主 dist。
 
 Creator 命令与构建退出码依据：[官方命令行发布说明](https://docs.cocos.com/creator/3.8/manual/en/editor/publish/publish-in-command-line)。
+
+默认PG读取的A/B/C/D隔离夹具现已提供：`npm.cmd run test:acceptance`只输出计划，`npm.cmd run test:acceptance-tools`检查工具；完整构建与经授权执行方法见[权威读取验收计划](docs/authoritative-read-acceptance.md)。夹具就绪不等于实库验收通过。

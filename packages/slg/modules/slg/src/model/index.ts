@@ -1,8 +1,9 @@
 import { defineGameModule } from "#tiangz/core";
-import { SlgWorldScene } from "./SlgWorldScene";
+import { SlgWorldScene, SlgGameComponent } from "./SlgWorldScene";
 import { SlgProtocol } from "./generated/protocol/slg/protocol/rpcs";
 
-export { SlgWorldScene, SlgProtocol };
+export { SlgWorldScene, SlgGameComponent, SlgProtocol };
+export type * from "./SlgState";
 export type * from "./generated/protocol/slg/protocol/messages";
 
 export const ModuleIdentity = Object.freeze({
@@ -12,6 +13,6 @@ export const ModuleIdentity = Object.freeze({
 
 defineGameModule({
   ...ModuleIdentity,
-  modelExports: { ModuleIdentity, SlgWorldScene, SlgProtocol },
-  requiredSystems: [SlgWorldScene],
+  modelExports: { ModuleIdentity, SlgWorldScene, SlgGameComponent, SlgProtocol },
+  requiredSystems: [SlgWorldScene, SlgGameComponent],
 });

@@ -2,9 +2,19 @@
   "version": 1,
   "entries": [
     {
+      "key": "proto/Slg_C_32000.proto#C2S_Game",
+      "name": "C2S_Game",
+      "code": 32003
+    },
+    {
       "key": "proto/Slg_C_32000.proto#C2S_WorldSnapshot",
       "name": "C2S_WorldSnapshot",
       "code": 32001
+    },
+    {
+      "key": "proto/Slg_C_32000.proto#S2C_Game",
+      "name": "S2C_Game",
+      "code": 32004
     },
     {
       "key": "proto/Slg_C_32000.proto#S2C_WorldSnapshot",

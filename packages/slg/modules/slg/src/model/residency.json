@@ -1,0 +1,7 @@
+{
+  "keepAliveMs": 300000,
+  "maxResidents": 32,
+  "maxPlayers": 32,
+  "retryDelayMs": 1000,
+  "maxTimerRetries": 5
+}

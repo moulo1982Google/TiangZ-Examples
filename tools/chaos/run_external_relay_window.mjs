@@ -1,6 +1,7 @@
 import { spawn, execFileSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { streamPages, commandFailure } from './stream_pages.mjs';
 
 const [runDir, deadlineText, prefixBase] = process.argv.slice(2);
 const deadline = Date.parse(deadlineText);
@@ -44,9 +45,21 @@ try {
     await sleep(1000);
   }
   const redisUrl = new URL(process.env.DBPROXY_REDIS_URL);
-  const stream = JSON.parse(execFileSync('docker', ['exec', '-i', 'tiangz-dbproxy-redis', 'sh', '-c', 'read -r REDISCLI_AUTH; export REDISCLI_AUTH; exec redis-cli --json XRANGE external.validation.events - +'], {
+  const stream = streamPages((start, end, count) => JSON.parse(execFileSync('docker', ['exec', '-i', 'tiangz-dbproxy-redis', 'sh', '-c', 'read -r REDISCLI_AUTH; export REDISCLI_AUTH; exec redis-cli --json XRANGE external.validation.events "$1" "$2" COUNT "$3"', 'sh', start, end, String(count)], {
     input: decodeURIComponent(redisUrl.password) + '\n', encoding: 'utf8', maxBuffer: 64 * 1024 ** 2,
-  }));
+    timeout: 30000,
+  })));
+  const seenByPrefix = new Map(segments.map(segment => [segment.prefix, new Set()]));
+  for (const [, fields] of stream) {
+    const values = Object.fromEntries(Array.from({ length: fields.length / 2 }, (_, i) => [fields[i * 2], fields[i * 2 + 1]]));
+    const id = values.event_id;
+    if (typeof id !== 'string') continue;
+    const colon = id.lastIndexOf(':');
+    const seen = seenByPrefix.get(id.slice(0, colon));
+    if (!seen || seen.has(id)) continue;
+    if (Number(id.slice(colon + 1)) !== seen.size + 1) throw Error('stream ordering mismatch');
+    seen.add(id);
+  }
   const verified = [];
   for (const segment of segments) {
     const prefix = segment.prefix;
@@ -57,20 +70,13 @@ try {
       (SELECT count(*) FROM dbproxy_snapshots WHERE namespace='relay_soak' AND starts_with(record_key, '${prefix}:') AND revision=1 AND (convert_from(payload,'UTF8')::jsonb->>'sequence')::bigint=split_part(record_key,':',2)::bigint),
       (SELECT count(*) FROM dbproxy_append_records WHERE namespace='relay_soak_audit' AND starts_with(record_key, '${prefix}:') AND operation_id=record_key AND (convert_from(payload,'UTF8')::jsonb->>'sequence')::bigint=split_part(record_key,':',2)::bigint);`).split('|').map(Number);
     if (facts[0] !== segment.committed * 2 || facts[1] !== facts[0] || facts[2] !== segment.committed) throw Error(`snapshot/fact mismatch: ${prefix}`);
-    const seen = new Set();
-    for (const [, fields] of stream) {
-      const values = Object.fromEntries(Array.from({ length: fields.length / 2 }, (_, i) => [fields[i * 2], fields[i * 2 + 1]]));
-      const id = values.event_id;
-      if (!id?.startsWith(prefix + ':') || seen.has(id)) continue;
-      if (Number(id.slice(prefix.length + 1)) !== seen.size + 1) throw Error(`stream ordering mismatch: ${prefix}`);
-      seen.add(id);
-    }
+    const seen = seenByPrefix.get(prefix);
     if (seen.size !== segment.committed) throw Error(`stream delivery mismatch: ${prefix}`);
     verified.push({ ...segment, counts, facts, streamUnique: seen.size });
   }
   save('relay-validation-final.json', { passed: true, at: new Date().toISOString(), segments: verified });
   console.log('RELAY_WINDOW_PASSED');
 } catch (error) {
-  save('relay-validation-final.json', { passed: false, at: new Date().toISOString(), error: error.message, segments });
+  save('relay-validation-final.json', { passed: false, at: new Date().toISOString(), error: 'Relay validation failed; inspect structured diagnostics', diagnostics: commandFailure(error), segments });
   process.exitCode = 1;
 }

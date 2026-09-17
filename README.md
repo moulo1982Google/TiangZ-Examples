@@ -64,6 +64,8 @@ test:runtime 使用自己的临时目录、随机本地端口和内存数据，�
 
 ## 日常验证
 
+三类可靠性测试使用 `npm run reliability` 查看计划（默认不执行）。Hotfix、DBProxy故障、游戏进程崩溃恢复可分别选择，构建、数据清理范围、显式执行确认和统一报告见[可靠性测试入口](tools/chaos/README.md)。整理后的运行链尚待用户指令实测，不计入下面的日常验证。
+
 - npm test：本工程游戏测试。
 - npm run test:coverage：框架与游戏联合 Core 覆盖率，门槛保持 70/60/75/72。
 - npm run test:native：模块 Rust 数据、AOI、战斗与真实 V8 bridge 测试，不跑压测。

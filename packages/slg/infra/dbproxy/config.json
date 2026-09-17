@@ -12,6 +12,7 @@
   "runtime": { "workerThreads": 2 },
   "storage": {
     "backend": "postgresRedis",
+    "authoritativeReadNamespaces": ["slg.demo.player.v1", "slg.demo.world.v1"],
     "postgresUrlEnv": "DBPROXY_POSTGRES_URL",
     "redisUrlEnv": "DBPROXY_REDIS_URL",
     "shards": 2,

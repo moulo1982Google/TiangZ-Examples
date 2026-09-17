@@ -1,5 +1,7 @@
 # 示例工程协作入口
 
+- 三类可靠性演练统一从 `tools/chaos/reliability.mjs` 进入；无参数仅计划。先读[测试入口与安全边界](tools/chaos/README.md)，用户明确要求运行前不得执行run/prepare/contracts。历史报告不代表模块迁移后通过；准备会清理专用测试库/Redis，必须显式确认，不复用SLG数据库。纯控制器单测和探针`--check`不启动服务。
+
 - SLG 在 packages/slg；MMORPG 包入口在 packages/mmorpg。根 build/check/start/smoke 必须带 --package <name>，不默认构建所有包；根 check:clients 保留六个 MMORPG 客户端检查。各包输出在自身 dist，生成协议锁必须显式操作。
 
 - 本工程拥有 MMORPG/Bench 服务端模块、游戏协议与配置、Native 游戏代码、六个客户端、部署示例及游戏测试；TiangZ 引擎源码在独立仓库。

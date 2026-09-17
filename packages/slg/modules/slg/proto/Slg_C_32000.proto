@@ -23,3 +23,36 @@ message S2C_WorldSnapshot // IResponse
   repeated WorldSite sites = 4;
   string stage = 5;
 }
+
+message BuildingView { uint32 id = 1; string name = 2; uint32 level = 3; double due_at = 4; }
+message HeroView { uint32 id = 1; string name = 2; uint32 level = 3; uint32 copies = 4; }
+message MarchView { uint32 tile = 1; uint32 hero = 2; uint32 troops = 3; uint32 power = 4; double due_at = 5; }
+message TileView { uint32 id = 1; string owner = 2; string reserved_by = 3; }
+message CommandReceipt { uint32 sequence = 1; string fingerprint = 2; bool accepted = 3; string message = 4; uint32 hero_id = 5; }
+
+//ResponseType S2C_Game
+// @ets.msg protocol=Slg method=Game
+message C2S_Game // IRequest
+{
+  string player = 1;
+  uint32 sequence = 2;
+  string action = 3;
+  uint32 target = 4;
+  uint32 amount = 5;
+}
+message S2C_Game // IResponse
+{
+  string player = 1;
+  uint32 food = 2;
+  uint32 troops = 3;
+  uint32 sequence = 4;
+  repeated BuildingView buildings = 5;
+  repeated HeroView heroes = 6;
+  repeated MarchView marches = 7;
+  repeated TileView tiles = 8;
+  string report = 9;
+  bool persisted = 10;
+  double server_time = 11;
+  double next_production_at = 12;
+  CommandReceipt receipt = 13;
+}

@@ -9,11 +9,18 @@ import path from "node:path";
 import { root, dbRoot, loadEnvironment, verifyContainers, sql, redis, command,
   containers, runtimeDatabase, contractDatabase, verifyCachePersistence } from "./local_validation_env.mjs";
 import { cpuTotals, cpuPercent, resourceViolation, hasDroppedLogs, memoryPressure, cpuPressure } from "./local_validation_resources.mjs";
+import { confirmation, suites, assertCoverage, assertRunDirectory } from "./reliability_plan.mjs";
+import { validationArtifacts, engine } from "./validation_artifacts.mjs";
+import { streamPages } from "./stream_pages.mjs";
 
 const mode = process.argv[2];
+if (!["--prepare", "--contracts", "--run"].includes(mode)) throw new Error("use reliability.mjs plan/check/build/run");
+if (process.platform !== "win32" || process.env.TIANGZ_LOCAL_VALIDATION_CONFIRM !== confirmation) throw new Error("explicit local destructive-test confirmation required; use reliability.mjs");
+const suite = process.env.TIANGZ_VALIDATION_SUITE;
+if (!["dbproxy", "game"].includes(suite)) throw new Error("select dbproxy or game suite explicitly");
 const base = path.resolve(root, "../.build-tmp/local-validation");
 const runDir = path.resolve(process.argv[3] ?? path.join(base, new Date().toISOString().replace(/[:.]/g, "-")));
-if (!runDir.startsWith(base + path.sep)) throw new Error("run directory must be below the dedicated validation root");
+assertRunDirectory(base, runDir);
 loadEnvironment();
 process.env.TOKIO_WORKER_THREADS = "2";
 verifyContainers();
@@ -21,7 +28,7 @@ verifyCachePersistence();
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const children = new Set();
 const services = new Map();
-const runtimeSpecs = [["front", 17601], ["map1", 17606], ["map2", 17607], ["dungeon", 17609], ["location", 17610]];
+const runtimeSpecs = [["front", 17601], ["gate1", 17611], ["gate2", 17612], ["map1", 17606], ["map2", 17607], ["dungeon", 17609], ["location", 17610]];
 let stopping = false;
 let phase = "setup";
 let sequence = 0;
@@ -112,7 +119,7 @@ async function startService(name, port) {
   const db = name.startsWith("dbproxy");
   const binary = path.join(runDir, "bin", db ? "tiangz-dbproxy-server.exe" : "TiangZ.exe");
   const args = db ? ["--config", path.join(runDir, "configs", `${name}.json`)]
-    : [path.join(runDir, "configs", `${name}.json`)];
+    : [`--runtime-root=${runDir}`, path.join(runDir, "configs", `${name}.json`)];
   const task = managed(name, binary, args, runDir, db ? {} : { TIANGZ_WATCHER_CONTROL: "stdin" });
   services.set(name, { ...task, port });
   await ready(port,120_000,task);
@@ -306,7 +313,11 @@ async function dynamicFallback() {
 async function inject(action) {
   phase = action;
   event("fault_started", { action });
-  if (action === "postgres") {
+  if (action === "game-all") {
+    for (const [name] of runtimeSpecs) await killService(name);
+    await checkedSleep(45_000);
+    for (const [name, port] of [...runtimeSpecs].reverse()) await startService(name, port);
+  } else if (action === "postgres") {
     command("docker", ["stop", "--time", "5", containers[0]]);
     await checkedSleep(65_000); // Exceeds the reconnect grace; exercises final-offline/save/recovery overlap.
     command("docker", ["start", containers[0]]);
@@ -346,6 +357,8 @@ async function inject(action) {
   event("infrastructure_recovered", { action });
 }
 async function prepare() {
+  if (existsSync(path.join(runDir, "STOP"))) throw new Error("stop requested before prepare");
+  const artifacts = await validationArtifacts(); // 必须早于清库；缺构建产物时不碰数据。
   await assertIdle();
   if (existsSync(path.join(runDir, "manifest.json"))) throw new Error("refusing to overwrite an existing run");
   mkdirSync(path.join(runDir, "configs"), { recursive: true });
@@ -354,6 +367,7 @@ async function prepare() {
   await containersReady();
   // This opt-in resets only two explicitly named local databases, never the existing tiangz database.
   for (const database of [runtimeDatabase, contractDatabase]) {
+    if (existsSync(path.join(runDir, "STOP"))) throw new Error("stop requested during prepare");
     sql(`DROP DATABASE IF EXISTS ${database} WITH (FORCE); CREATE DATABASE ${database};`, "postgres");
   }
   for (const name of containers.slice(1)) redis(name, ["FLUSHALL", "SYNC"]);
@@ -364,7 +378,8 @@ async function prepare() {
     bindIp: "127.0.0.1", innerIp: "127.0.0.1", ...(scene.outerIp ? { outerIp: "127.0.0.1", outerPort: scene.port } : {}) }));
   save(path.join(runDir, "configs/known-scenes.json"), { knownScenes: all });
   for (const [index, [name, port]] of runtimeSpecs.entries()) {
-    const scenes = all.filter(scene => name === "front" ? ["LoginMgr", "Login", "Gate"].includes(scene.sceneType)
+    const scenes = all.filter(scene => name === "front" ? ["LoginMgr", "Login"].includes(scene.sceneType)
+      : name === "gate1" ? scene.name === "gate_1" : name === "gate2" ? scene.name === "gate_2"
       : name === "map1" ? scene.name === "map_1" : name === "map2" ? scene.name === "map_2"
       : name === "dungeon" ? ["map_manager", "dungeon_1"].includes(scene.name) : scene.sceneType === "Location");
     // Dedicated dungeon host is the sole dynamic-map owner for deterministic crash tests.
@@ -384,6 +399,8 @@ async function prepare() {
     config.observability.listenAddr = `127.0.0.1:${metrics}`;
     config.runtime.workerThreads = 2;
     config.storage.shards = 2;
+    // 游戏恢复只读取PG已提交的角色快照；DBProxy原始缓存故障组仍保留原语义。
+    config.storage.authoritativeReadNamespaces = suite === "game" ? ["player"] : [];
     config.storage.cacheFallbackConcurrency = 4;
     config.storage.cacheRedisUrlEnv = "DBPROXY_CACHE_REDIS_URL";
     config.outboxRelay = { publishTimeoutMs: 5000, defaultPublisher: "local-events",
@@ -391,14 +408,11 @@ async function prepare() {
       sources: ["game", "achievement"].map(producer => ({ producer, version: 1, destination: "local.validation.events" })) };
     save(path.join(runDir, `configs/dbproxy${number}.json`), config);
   }
-  for (const name of ["TiangZ.exe", "map_probe_load.exe", "validation_resource_snapshot.exe"]) copyFileSync(path.join(root, "target/release", name), path.join(runDir, "bin", name));
-  for (const name of ["tiangz-dbproxy-server.exe", "dbproxy_fault_soak.exe", "dbproxy_relay_soak.exe", "dbproxy_aof_probe.exe"]) copyFileSync(path.join(dbRoot, "target/release", name), path.join(runDir, "bin", name));
-  for (const name of ["model.js", "model.manifest.json", "hotfix.js", "hotfix.manifest.json",
-    "player_trade_persistence_probe.cjs", "dynamic_map_fallback_probe.cjs"]) copyFileSync(path.join(root, "dist", name), path.join(runDir, "dist", name));
+  for (const [destination, source] of artifacts) copyFileSync(source, path.join(runDir, destination));
   cpSync(path.join(root, "dist/game-config"), path.join(runDir, "dist/game-config"), { recursive: true });
   cpSync(path.join(root, "navigation"), path.join(runDir, "navigation"), { recursive: true });
   mkdirSync(path.join(runDir,"controller-source"));
-  for(const name of ["run_local_validation.mjs","local_validation_env.mjs","local_validation_resources.mjs"]) {
+  for(const name of ["run_local_validation.mjs","local_validation_env.mjs","local_validation_resources.mjs","reliability_plan.mjs","validation_artifacts.mjs"]) {
     copyFileSync(path.join(root,"tools/chaos",name),path.join(runDir,"controller-source",name));
   }
   const hashes = {};
@@ -414,26 +428,28 @@ async function prepare() {
     hashDirectory(dir);
   }
   const revisions = {};
-  for (const [name, cwd] of [["TiangZ", root], ["DBProxy", dbRoot]]) {
+  for (const [name, cwd] of [["Examples", root], ["TiangZ", engine], ["DBProxy", dbRoot]]) {
     const diff = command("git", ["diff", "HEAD"], { cwd });
     writeFileSync(path.join(runDir, `${name}.patch`), diff);
     revisions[name] = { head: command("git", ["rev-parse", "HEAD"], { cwd }).trim(),
       status: command("git", ["status", "--short"], { cwd }), patchHash: createHash("sha256").update(diff).digest("hex") };
   }
-  save(path.join(runDir, "manifest.json"), { preparedAt: new Date().toISOString(), runId, hashes, revisions,
+  save(path.join(runDir, "manifest.json"), { preparedAt: new Date().toISOString(), runId, suite, hashes, revisions,
     scope: "local-only; frozen executables and bundles; remote seven-day run unchanged" });
   event("prepared", { runDir });
 }
 async function contracts() {
+  if (existsSync(path.join(runDir, "STOP"))) throw new Error("stop requested before contracts");
   await assertIdle();
   await finish(managed("contracts-controller", "node", ["--test", "tools/chaos/local_validation_env.test.mjs", "tools/chaos/local_validation_resources.test.mjs", "tools/chaos/validation_resource_snapshot.test.mjs"], root), 30_000);
   process.env.DBPROXY_POSTGRES_URL = process.env.DBPROXY_TEST_POSTGRES_URL;
   for (const [label, args] of [
     ["unit", ["test", "--workspace", "--locked", "-j1", "--", "--test-threads=1"]],
-    ...["postgres_redis", "outbox_concurrency", "outbox_relay", "fault_matrix"].map(name => [name,
+    ...["postgres_redis", "outbox_concurrency", "outbox_relay", ...(suite === "dbproxy" ? ["fault_matrix"] : [])].map(name => [name,
       ["test", "-p", "tiangz-dbproxy-storage", "--test", name, "--locked", "-j1", "--", "--ignored", "--test-threads=1"]]),
     ["postgres_redis_network", ["test", "-p", "tiangz-dbproxy-server", "--test", "postgres_redis_network", "--locked", "-j1", "--", "--ignored", "--test-threads=1"]],
   ]) {
+    if (existsSync(path.join(runDir, "STOP"))) throw new Error("stop requested during contracts");
     // Each integration suite owns a disposable database and Redis state; immutable
     // route registrations from another suite must not alter its startup contract.
     sql(`DROP DATABASE IF EXISTS ${contractDatabase} WITH (FORCE); CREATE DATABASE ${contractDatabase};`, "postgres");
@@ -447,12 +463,14 @@ async function contracts() {
 async function run() {
   const seconds = Number(process.argv[4] ?? 10800);
   const players = Number(process.argv[5] ?? 100);
-  const allowedActions = ["postgres","cache","redis","aof","map1","map2","map2-orphan","location","dbproxy1","dbproxy2","dynamic"];
+  const allowedActions = suites[suite].actions;
   const actions = process.argv[6]?.split(",") ?? allowedActions;
   const faultGapMs = Number(process.argv[7] ?? 180_000);
   if (!actions.length || actions.some(action => !allowedActions.includes(action)) || !Number.isInteger(faultGapMs) || faultGapMs < 10_000 || faultGapMs > 600_000) throw new Error("invalid fault plan");
   if (!Number.isInteger(seconds) || seconds < 120 || seconds > 14400 || !Number.isInteger(players) || players < 2 || players > 200) throw new Error("invalid local duration/player limit");
   if (!existsSync(path.join(runDir, "contracts-passed.json"))) throw new Error("real database contract suites must pass before the long run");
+  if (json(path.join(runDir, "manifest.json")).suite !== suite) throw new Error("prepared suite mismatch");
+  if (actions.length !== allowedActions.length || new Set(actions).size !== allowedActions.length) throw new Error("full suite coverage required");
   if (existsSync(path.join(runDir, "started.json"))) throw new Error("run already started; prepare another evidence directory");
   for (const [file, expected] of Object.entries(json(path.join(runDir, "manifest.json")).hashes)) {
     if (createHash("sha256").update(readFileSync(path.join(runDir,file))).digest("hex") !== expected) throw new Error(`frozen artifact changed: ${file}`);
@@ -493,6 +511,7 @@ async function run() {
   await marker(soak,"SOAK_READY"); await marker(relay,"RELAY_READY");
   event("validation_started",{seconds,players,persistencePlayers:100,deadlineAt:new Date(deadline).toISOString()});
   let actionIndex = 0;
+  const completedActions = [];
   let nextFaultAt = startedAt + Math.min(faultGapMs, seconds * 1000 / 4);
   while (Date.now() < deadline - 180_000) {
     await checkedSleep(1);
@@ -516,12 +535,14 @@ async function run() {
       }
       await trade(0,true);
       event("business_recovered",{action,unchangedAccounts:true,passingRounds:2});
+      completedActions.push(action);
       if (actionIndex % 3 === 0) await trade(actionIndex);
       phase="healthy";
       nextFaultAt=Date.now()+faultGapMs;
     }
   }
   while (Date.now()<deadline) { await checkedSleep(1); await gameRound(players); }
+  assertCoverage(actions, completedActions);
   await finish(soak,300_000,'"passed":true');
   await finish(relay,300_000,'"passed":true');
   await trade(0,true);
@@ -534,7 +555,7 @@ async function run() {
     await checkedSleep(1000);
   } while(Date.now()<until);
   if(counts[0]!==relayFinal.committed || counts[1]!==counts[0] || counts[2]!==0) throw new Error("generic relay final SQL reconciliation failed");
-  const entries=JSON.parse(redis(containers[1],["--json","XRANGE","local.validation.events","-","+"]));
+  const entries=streamPages((start,end,count)=>JSON.parse(redis(containers[1],["--json","XRANGE","local.validation.events",start,end,"COUNT",String(count)])));
   const seen=new Set(); let last=0;
   for(const [,fields] of entries) {
     const values=Object.fromEntries(Array.from({length:fields.length/2},(_,i)=>[fields[i*2],fields[i*2+1]]));
@@ -553,10 +574,11 @@ async function run() {
   const trades=sql(`SELECT count(*),count(*) FILTER (WHERE o.published_at IS NOT NULL AND o.operation_id=a.operation_id) FROM dbproxy_append_records a LEFT JOIN dbproxy_outbox o ON o.event_id=a.record_key || ':settled' WHERE a.namespace='player.trade.audit';`).trim().split('|').map(Number);
   if(trades[0]<1 || trades[1]!==trades[0]) throw new Error("game CommitRecords audit/event reconciliation failed");
   const tradeIds=sql("SELECT record_key || ':settled' FROM dbproxy_append_records WHERE namespace='player.trade.audit';").trim().split(/\r?\n/);
-  const tradeEvents=JSON.parse(redis(containers[1],["--json","XRANGE","dbproxy:outbox:player.trade.settled","-","+"]));
-  const publishedTrades=new Set(tradeEvents.map(([,fields])=>fields[fields.indexOf('event_id')+1]));
+  const tradeEvents=streamPages((start,end,count)=>JSON.parse(redis(containers[1],["--json","XRANGE","dbproxy:outbox:player.trade.settled",start,end,"COUNT",String(count)])));
+  const publishedTrades=new Set();
+  for(const [,fields] of tradeEvents) publishedTrades.add(fields[fields.indexOf('event_id')+1]);
   if(tradeIds.some(id=>!publishedTrades.has(id))) throw new Error("game trade published rows are missing from the actual Stream");
-  save(path.join(runDir,"final.json"),{passed:true,at:new Date().toISOString(),seconds,players,actions:actionIndex,relayFinal,sqlCounts:counts,streamUnique:seen.size,facts,trades});
+  save(path.join(runDir,"final.json"),{passed:true,suite,completedActions,at:new Date().toISOString(),seconds,players,actions:actionIndex,relayFinal,sqlCounts:counts,streamUnique:seen.size,facts,trades});
   event("validation_completed",{passed:true,actions:actionIndex});
 }
 for (const signal of ["SIGINT","SIGTERM"]) process.once(signal,()=>{stopping=true;fatal=new Error(`received ${signal}`);});
@@ -587,13 +609,24 @@ try {
         service.child.stdin.end("shutdown\n");
       }
     }
+    const cleanup = [];
     await Promise.all(runtimeSpecs.map(async ([name])=>{
       const service=services.get(name);
       if(service?.child.exitCode===null) {
-        const timer=setTimeout(()=>service.child.kill(),40_000);
-        try {await service.done;} finally {clearTimeout(timer);}
+        let forced = false;
+        const timer=setTimeout(()=>{ forced = true; service.child.kill(); },40_000);
+        try { const code = await service.done; cleanup.push({ name, code, forced }); }
+        catch (error) { cleanup.push({ name, error: String(error), forced }); }
+        finally {clearTimeout(timer);}
+      } else if (service) {
+        cleanup.push({ name, code: service.child.exitCode, signal: service.child.signalCode, forced: false });
       }
     }));
     for(const child of children) { if(child.exitCode===null)child.kill(); }
+    if (existsSync(runDir)) save(path.join(runDir, "cleanup.json"), { gameProcesses: cleanup });
+    if (cleanup.some(item => item.forced || item.error || item.code !== 0)) {
+      process.exitCode = 1;
+      if (existsSync(runDir) && !existsSync(path.join(runDir, "failure.json"))) save(path.join(runDir, "failure.json"), { at: new Date().toISOString(), error: "game process cleanup failed", cleanup });
+    }
   }
 }

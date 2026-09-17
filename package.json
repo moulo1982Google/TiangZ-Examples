@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "reliability": "node tools/chaos/reliability.mjs",
+    "test:reliability-plan": "node --test tools/chaos/reliability_plan.test.mjs",
     "packages": "node tools/example_package.mjs list",
     "setup": "node tools/example_package.mjs setup",
     "build": "node tools/example_package.mjs build",
