@@ -4,17 +4,30 @@ import { spawnSync } from 'node:child_process';
 import { createServer, connect } from 'node:net';
 import { once } from 'node:events';
 import path from 'node:path';
-import { parse, confirmation } from './plan.mjs';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { parse, confirmation, cases, smoke30 } from './plan.mjs';
 import { assertIncome, assertReceipt } from './assertions.mjs';
 import { faultProxy } from './proxy.mjs';
 import { until, command } from './environment.mjs';
+
+test('failed child preserves stdout and stderr evidence', async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), 'slg-command-log-'));
+  try {
+    const logFile = path.join(directory, 'child.log');
+    await assert.rejects(command(process.execPath, ['-e', 'console.log("probe-started"); console.error("assertion-detail"); process.exitCode = 101;'], { logFile }), /exited 101/);
+    const evidence = await readFile(logFile, 'utf8');
+    assert.match(evidence, /probe-started/);
+    assert.match(evidence, /assertion-detail/);
+  } finally { await rm(directory, { recursive: true }); }
+});
 
 test('plan and rejected arguments never require Docker or artifacts', () => {
   const script = path.resolve(import.meta.dirname, '../authoritative_acceptance.mjs');
   const run = args => spawnSync(process.execPath, [script, ...args], { encoding: 'utf8', env: { ...process.env, PATH: '' }, timeout: 5000 });
   const result = run([]);
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(JSON.parse(result.stdout).cases.length, 17);
+  assert.equal(JSON.parse(result.stdout).cases.length, Object.keys(cases).length);
   for (const args of [['run'], ['run', '--confirm', 'yes'], ['run', '--players', '500'], ['plan', '--cases', 'A1,A1'], ['plan', '--rounds', '4'], ['plan', '--cases', 'missing'], ['plan', '--cases', 'constructor'], ['check', '--confirm', confirmation]]) {
     assert.notEqual(run(args).status, 0, args.join(' '));
   }
@@ -105,4 +118,18 @@ test('cooperative child cancellation preserves cleanup output', { timeout: 5000 
     assert.equal(error.stdout, 'cleanup-complete');
     return true;
   });
+});
+
+test('smoke30 freezes duration, coverage and single round without claiming the full matrix', () => {
+  const plan = parse(['plan', '--profile', 'smoke30']);
+  assert.deepEqual(plan.selected, smoke30); assert.equal(plan.durationMs, 1800000); assert.equal(plan.rounds, 1);
+  assert.equal(plan.fullAcceptance, false); assert.deepEqual(plan.pendingCoverage, {});
+  for (const option of ['--cases', '--rounds']) assert.throws(() => parse(['plan', '--profile', 'smoke30', option, '1']));
+});
+
+test('acceptance90 covers every implemented case with a budget and post-fault observation', () => {
+  const plan = parse(['plan', '--profile', 'acceptance90']);
+  assert.deepEqual(plan.selected, Object.keys(cases)); assert.equal(plan.rounds, 1);
+  assert.equal(plan.durationMs, 5400000); assert.equal(plan.recoveryObservationMs, 180000);
+  assert.equal(plan.fullAcceptance, false);
 });

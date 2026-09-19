@@ -1,6 +1,6 @@
 # SLG 协作入口
 
-- SLG三类复测（热更、DBProxy故障、游戏崩溃恢复）先读 docs/authoritative-read-acceptance.md，区分已有脚本、待补夹具和历史通过报告。当前A/B/C/D脚本不含待补H热更/J联合场景，其passed不等于三类整体验收通过。文档更新不自动启动故障/容量/长稳；game组仍是MMORPG，不能替代SLG验收。
+- SLG三类复测（热更、DBProxy故障、游戏崩溃恢复）先读 docs/authoritative-read-acceptance.md，区分已有脚本、待补夹具和历史通过报告。当前脚本包含A/B/C/D及25个H/J子项；smoke30为20项目关键路径，acceptance90为42项目全量单轮及观察窗口，两种profile通过均不等于完整三轮矩阵通过。文档更新不自动启动故障/容量/长稳；game组仍是MMORPG，不能替代SLG验收。
 
 - 接续交付/CI/CD 工作先读 docs/delivery-handoff.md。delivery 脚本只面向本地隔离验收，不自动发布生产；换机先保存未提交源码并重建生成物，不迁移 temp 凭据。
 

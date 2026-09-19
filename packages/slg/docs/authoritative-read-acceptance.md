@@ -1,6 +1,14 @@
 # SLG 三类可靠性验收：热更、DBProxy故障、游戏崩溃恢复
 
-日期：2026-09-17。状态：**A/B/C/D隔离夹具和断言已补齐但联合验收尚未执行；H/J用例已细化，业务夹具待补**。本文件是三类测试总清单，不是通过报告，也不授予启动故障/容量/长稳的权限。保留原文件名以兼容现有链接。
+D1修复后定向复测：run-wTYhCH/report.json为subset-passed，官方authoritative_reads真实PG/Redis测试1通过（11.42秒），SLG原子批量探针通过，游戏/代理/探针/存储全部停止。工具单测17通过；正式build/check通过。此证据仅覆盖D1，不代表H/J或整轮90分钟通过。
+
+日期：2026-09-18。状态：**25个H/J子项均已分批实测通过，H3额外连续三轮通过，H8连续资源观察通过；八小时长稳最终因有效资源样本不足失败，采样已修正且10分钟实库回归通过；完整三轮矩阵仍待验收**。历史首轮90分钟在D1提前停止，后续已定向修复复测，不能把历史缺项当作当前状态。本文件是三类测试总清单，不替代实际报告，也不授予启动故障/容量/长稳的权限。保留原文件名以兼容现有链接。
+
+D1定向复现 `run-TC9Bun` 的 `D1-1/sql-snapshot-probe.log` 确认失败来自夹具：独立存储测试共用SLG数据库，却注册了不同Redis地址的同名Publisher，初始化按契约拒绝。现改为本轮隔离PG容器内的专用 `authority_probe` 数据库；SLG原子批量探针仍针对SLG记录，官方存储测试独立验证SQL快照。子进程失败或超时也保存stdout/stderr日志。禁止删除Publisher注册记录或放宽校验；修复后的验收结果以新报告为准。
+
+A4复测 `run-GCm8Ll` 又暴露了环境清理问题：每个用例只停止容器会留下默认网络，累计后耗尽Docker地址池，未进入业务断言。现已确认清理空的 `slg-acceptance-*` 网络，并将每轮收尾改为 `docker compose down --remove-orphans`，删除本轮容器和网络、保留命名卷；A4定向复测 `run-Y5p6QT` 已通过。 / The A4 rerun `run-GCm8Ll` exposed a cleanup issue: stopping containers alone retained one default network per case until Docker address pools were exhausted, before business assertions ran. Empty `slg-acceptance-*` networks were removed after verifying no running containers, and each case now uses `docker compose down --remove-orphans` to remove its containers and network while retaining named volumes; targeted A4 rerun `run-Y5p6QT` passed.
+
+H3夹具已修正正式协议的 `writes[].record` 匹配、info日志可见性及短准备窗口下的受控流量。`run-gOw29M/report.json`连续三轮通过，准备阶段分别有3、4、3条客户端响应，仍要求实际收到回包后才能计入证据；没有修改Runtime。 / H3 now uses official commit fields, visible lifecycle logs and bounded preparation traffic. Three consecutive rounds passed with three, four and three client responses in the preparation window; runtime behavior is unchanged.
 
 ## 目标和边界
 
@@ -16,7 +24,7 @@
 | DBProxy故障 | B组，配合A/D组 | 默认权威读取、缓存故障隔离、节点故障和恢复一致性 |
 | 游戏进程崩溃恢复 | C组，配合A组 | 建筑、抽卡、升级、产粮和行军的持久恢复与幂等 |
 
-Hotfix/config底层机制沿用框架，不再造另一套热更。框架测试通过不代表SLG热更业务通过；当前SLG数值仍写在Hotfix，尚需补Luban测试配置和业务配对断言。
+Hotfix/config底层机制沿用框架，不再造另一套热更。框架测试通过不代表SLG热更业务通过；正式SLG数值仍写在Hotfix，隔离夹具已使用正式Luban生成配置并核对代码/配置配对。
 
 ## 验收底线
 
@@ -35,9 +43,9 @@ Hotfix/config底层机制沿用框架，不再造另一套热更。框架测试�
 | --- | --- | --- |
 | SLG `npm.cmd run test:gameplay` | 29条规则、假存储、模拟前台控制测试 | 不是实库故障或真机证据 |
 | SLG `npm.cmd run smoke` | 无数据库真实RPC、断开11秒重连 | 不能证明新默认读PG或真实5分钟回收 |
-| SLG `tools/authoritative_acceptance.mjs` | A1–A5、B1–B6、C组、D1–D5的独立环境编排 | 新夹具未实跑；D5旧服务端为握手模拟器 |
-| H组SLG热更业务夹具（待补） | 计划覆盖下文H1–H9 | 当前test:acceptance命令不包含H；不能用框架负载测试代替 |
-| SLG `tools/recovery.mjs` | 3玩家、7类游戏强杀/恢复场景，独立SQL对账 | 需用新制品重跑；没有下面全部缓存/DBProxy故障编排 |
+| SLG `tools/authoritative_acceptance.mjs` | A1–A5、B1–B6、C组、D1–D5的独立环境编排，已有真实执行报告 | 尚无完整三轮通过报告；D5旧服务端为握手模拟器 |
+| H/J隔离SLG热更夹具 | 25子项已接入，当前分批结果见文首及实际report.json | 不把分批、单轮、框架或构建证据冒充完整三轮 |
+| SLG `tools/recovery.mjs` | 3玩家、7类游戏强杀/恢复场景，独立SQL对账，已在C组实跑 | 没有下面全部缓存/DBProxy故障编排 |
 | DBProxy `tools/test_authoritative_reads.mjs` | TCP默认读取、栅栏、缓存写超时、PG阻塞、批量快照等 | 存储级证据；不是SLG业务链路或OS进程强杀 |
 | Examples `--suite slg` | 现有SLG恢复脚本的统一入口 | `all`不包含slg；`game`仍是MMORPG，不能用它冒充SLG |
 
@@ -53,7 +61,7 @@ Hotfix/config底层机制沿用框架，不再造另一套热更。框架测试�
 - 每项记录故障命中证据。暂停Redis但未实际触发缓存写超时，或计划丢ACK却未命中提交回包，只能标为“未有效执行”，不能通过。
 - 等待以状态/记录证据和有界超时为准。预先写入场景时限及恢复预算；故障期允许明确错误，解除故障后须在预算内恢复。禁止无限重试或只等最终看起来正常。
 
-## H. SLG业务持续运行下的热更（必选，夹具待补）
+## H. SLG业务持续运行下的热更（必选）
 
 遵循[主工程热更设计](../../../../TiangZ/docs/design/typescript-hot-reload.md)：保持一个完整Hotfix发布包，与完整配置快照配对；在线准备阶段正常服务，准备完成后短暂停入口，在两次Update之间提交。使用已有方法名Timer，业务禁止await时间；数据库/RPC等待仍需按现有排空规则处理。
 
@@ -80,11 +88,11 @@ Hotfix/config底层机制沿用框架，不再造另一套热更。框架测试�
 
 每次发布记录候选releaseId、Hotfix/config哈希、前后generation、操作与任务ID、暂停/排空/预检耗时、RPC延迟及超时、失败原因和入口恢复证据；持续核对业务使用的配对与PG资产。机制原子性是Process内代码/配置原子性，不是数据库事务或全部Pod同时切换。
 
-目前H组是待实施用例，不能向现有test:acceptance传入不存在的H参数。框架热更回归只作前置证据。后续原定“1小时、约每10分钟热更、500客户端”作为容量/长稳阶段单独安排，当前SLG32玩家和有限玩法需先解决负载夹具限制；24小时暂不执行。
+当前可执行H子项见文末实施清单，以具体子项如H2a、H3-F2传入--cases。框架热更回归只作前置证据。后续原定“1小时、约每10分钟热更、500客户端”作为容量/长稳阶段单独安排，当前SLG32玩家和有限玩法需先解决负载夹具限制；24小时暂不执行。
 
 ### H/J共同前置条件与判定口径
 
-以下为待实现夹具的验收规格，不表示已有自动化或本轮执行结果。每个子用例至少3轮独立环境；H8每轮包含完整10次候选尝试。不能仅跑一个代表子项就将整组标为通过。
+以下为完整验收规格；当前自动化覆盖与缺项以文末实施清单为准，不表示本轮已执行真实故障验收。每个子用例至少3轮独立环境；H8每轮包含完整10次候选尝试。不能仅跑一个代表子项就将整组标为通过。
 
 | 项目 | 固定要求 |
 | --- | --- |
@@ -129,13 +137,13 @@ H7使用外部代理和控制器调度窗口，不在业务中加入等待时间
 
 ### H8资源门槛与采样
 
-- 每轮先做2次不计入正式10次的成功配对切换，完成任务后采样30秒作为预热基线。10次序列固定为：P22、回滚P11、无效配置、P21、P12、损坏哈希、P22、回滚P11、求值失败、P22；每项保留预期发布身份及成功/拒绝结果。
-- 每秒采样Timer、pending、入口/出站队列深度、JS堆和RSS；每次任务完成且停止发新命令后稳定采样30秒，结束再观察60秒。Timer基线允许每个驻留玩家的合法回收Timer及已知框架常驻Timer，逐项列出，不能粗暴要求总Timer为0。
+- 每轮先做2次不计入正式10次的成功配对切换，完成任务后采样30秒作为预热基线。10次序列固定为：P22、回滚P11、无效配置、P21、P12、损坏哈希、P22、回滚P12、求值失败、P22；回滚恢复上一活动配对，不能把此前P12误记为P11。每项保留预期发布身份及成功/拒绝结果。
+- 每秒采样Timer、pending、入口/出站队列深度、JS堆和RSS；每次任务完成且停止发新命令后稳定采样75秒，结束再观察90秒。Timer基线允许每个驻留玩家的合法回收Timer及已知框架常驻Timer，逐项列出，不能粗暴要求总Timer为0。
 - 解除阻塞、已到期任务完成并停止新请求后10秒内，业务pending和本轮请求队列应归零；业务任务Timer应等于未到期任务/驻留回收的预期数量。非零残留必须能对应具体合法任务，不能仅以低于进程总容量判通过。
 - JS堆/RSS不要求立即下降或回到启动值。首版小规模检查采用：每个稳定窗口中位数相对预热基线的增长不得超过`max(64 MiB, 基线的25%)`；最后5个稳定窗口的中位数不得连续递增且累计增长超过16 MiB。JS堆和RSS分别判断，原始样本留档；这是夹具预设筛查门槛，不是生产容量承诺或泄漏证明。
 - 必需指标无采集接口时先补稳定观测；缺采样、采样中断、业务动作不足或无法维持固定工作量均不得通过。所有门槛随运行清单冻结，失败后调整门槛必须新开报告，不改写旧结果。
 
-## J. 三条主线通过后的联合场景（夹具待补）
+## J. 三条主线通过后的联合场景
 
 前置：H、B、C主线及A/D支撑项完成，附覆盖清单；J1–J3每个子项至少3轮独立基线。J阶段允许明确规划的组合故障，除此之外不叠加随机故障。
 
@@ -215,11 +223,11 @@ D1同时运行正式客户端并发原子写/批量读，以及本轮构建的`a
 ## 执行顺序、命令与报告
 
 1. 先review已有A/B/C/D夹具并补H组SLG配置/热更夹具、断言及隔离目标；不要直接启动现有all流程。
-2. 运行纯单测、检查、重建制品。分别验证H热更、B数据库故障、C游戏恢复三条主线，并完成A/D支撑场景；现有C组可先小规模复跑，但不能因此跳过H组。每项至少3次独立重复，每次恢复到明确基线，不自动扩大负载。
+2. 运行纯单测、检查、重建制品。分别验证H热更、B数据库故障、C游戏恢复三条主线，并完成A/D支撑场景；现有C组可先小规模复跑，但不能因此跳过H组。正式完整验收每项至少3次独立重复；acceptance90先做全项目单轮，每次恢复到明确基线，不自动扩大负载。
 3. 正确性全部通过后另行制定PG并发阶梯：分开驻留重连、冷加载、进程启动扫描。记录CPU/内存/磁盘、PG参数和连接预算、QPS、P50/P95/P99、连接等待、超时/错误和恢复总耗时。当前32玩家上限不是3000在线模型，不能直接启动500玩家。
 4. 容量与长稳的时长/人数另行确认，24小时本轮不执行。
 
-三条主线分别通过后，按上文J组子用例执行联合场景；J1区分DB提交前后，J2验证正确启动配对，J3区分已提交但客户端未知与尚未送达的命令。H/J仍未接入当前脚本，不能使用下列A/B/C/D命令冒充完整三类验收。
+三条主线分别通过后，按上文J组子用例执行联合场景；J1区分DB提交前后，J2验证正确启动配对，J3区分已提交但客户端未知与尚未送达的命令。H/J子项已接入当前脚本；完整三轮矩阵尚未执行，见实施清单。smoke30允许先运行联合场景进行诊断，不替代本节规定的完整验收前置。
 
 在SLG包运行：
 
@@ -235,15 +243,15 @@ npm.cmd run test:acceptance -- build
 npm.cmd run test:acceptance -- check
 # 获准执行故障验收后，先运行C组；不是整轮通过 / Authorized subset, not full acceptance.
 npm.cmd run test:acceptance -- run --cases C --rounds 1 --confirm isolated-slg-authoritative-test
-# 当前A/B/C/D矩阵，每项独立环境重复3次；不含待补H/J组
+# 当前已实现矩阵，每项独立环境重复3次；缺项另列 / Repeat implemented cases; retain coverage gaps.
 npm.cmd run test:acceptance -- run --confirm isolated-slg-authoritative-test
 ```
 
 `plan`默认无I/O，`check`仅检查构建清单中的源码及制品哈希，不查询Docker。源码变化须重新`build`；短TTL只修改独立源码副本并走正式生成器，不更改日常Model配置。新入口固定3玩家，拒绝人数/长稳参数。原统一`--suite slg`仍只执行C组。
 
-构建清单在`temp/authoritative-acceptance/build.json`，报告在`temp/authoritative-acceptance/run-*/report.json`，每项有单独目录及`rpc-events.json`、游戏日志。报告记录场景、轮次、基线/最终SQL、故障证据、制品/源码哈希、协议指纹、PG参数、容器资源快照和收尾结果。当前脚本的`passed`只表示A/B/C/D全部必选项3轮通过，子集仅`subset-passed`；**均不包括H热更、J联合场景，也不是本文三类整体验收通过**。整体验收必须另附H/J报告及覆盖清单；这些结果也不包含真实历史服务端、容量或长稳认证。失败、未命中和未运行不得算通过。
+构建清单在`temp/authoritative-acceptance/build.json`，报告在`temp/authoritative-acceptance/run-*/report.json`，每项有单独目录及`rpc-events.json`、游戏日志。报告记录场景、轮次、基线/最终SQL、故障证据、制品/源码哈希、协议指纹、PG参数、容器资源快照和收尾结果。单轮profile输出`acceptance90-passed`或`smoke30-passed`，**不是本文三轮完整验收通过**；只有全部42项目各三轮通过才输出`passed`。报告逐项保留结果；这些结果也不包含真实历史服务端、容量或长稳认证。失败、未命中和未运行不得算通过。
 
-每个A/B/D项使用新项目、PG、队列Redis、缓存Redis及两个DBProxy，PG/缓存和业务端口仅发布随机回环地址。C组每轮单独项目内部顺序执行7项业务场景。结束停止本轮资源并保留卷，不清理其他项目。Ctrl+C请求有界收尾；父控制器通过IPC要求C子控制器收尾，超时强制退出或进程外杀控制器仍需按报告项目名/PID复核。目录含隔离凭据，不能整体公开上传；仅复制脱敏报告及必要日志。
+每个A/B/D/H/J项使用新项目、PG、队列Redis、缓存Redis及两个DBProxy，PG/缓存和业务端口仅发布随机回环地址。C组每轮单独项目内部顺序执行7项业务场景。结束停止本轮资源并保留卷，不清理其他项目。Ctrl+C请求有界收尾；父控制器通过IPC要求C子控制器收尾，超时强制退出或进程外杀控制器仍需按报告项目名/PID复核。目录含隔离凭据，不能整体公开上传；仅复制脱敏报告及必要日志。
 
 历史证据：SLG两轮7项强杀为驻留改造前基线；DBProxy target/authority-read-W2M1FK 为默认读取存储级证据；29条单测与无DB重连冒烟是另一层。三者不能相加冒充本计划已完成的SLG实库联合验收。
 
@@ -253,4 +261,145 @@ npm.cmd run test:acceptance -- run --confirm isolated-slg-authoritative-test
 
 本次未执行整套`test:acceptance build`，未重建游戏或Docker镜像，未启动A/B/C/D实库环境、外网、容量或长稳。没有修改SLG业务协议或手工编辑生成代码；SLG codegen仅check。正式实跑前必须执行上述完整构建和哈希检查，不能使用旧恢复报告作为结果。
 
-本次用例文档补充：已细化H/J子项、H3故障变体、超时起点、资源筛查门槛及覆盖汇总规则；仅修改文档并检查表格/引用，未实现H/J夹具，未运行新的测试或codegen。上面的测试记录保留为此前夹具验证结果。
+此前文档轮次只补充验收规格。当前实施与验证见下节；上面的历史测试结果不自动适用于新热更夹具。
+
+## H/J夹具实施与30分钟入口（2026-09-17）
+
+所有新文件位于包内tools/acceptance。build-hotfix复制SLG模块到独立temp目录，经正式协议、Luban、类型检查和Bundle生成器构建；日常SLG模块及协议不改。冻结基线一次增加诊断字段，随后P11/P21/P12/P22保持同一Model/协议/schema，分别代表代码1/2、配置1/2。建筑基础成本/工期为配置1的200粮/10秒、配置2的240粮/12秒，再乘当前等级。响应捕获await前代码版本、await后配置版本及实际配置指纹，以检测混合配对。
+
+每份合法配对都有完整启动包；J2明确从P22重启，J3明确从P11重启。客户端使用正式生成的SLG codec控制请求/响应，正常RPC超时30秒；DB超时仍为5秒，热更窗口3秒。H4/J1必须捕获真实pauseStart与abort，原RPC仍未结束且DB未先超时；不满足标not-effective。H7控制器等待自然分钟边界，不改时钟或数据库时间字段，恢复后先SQL核验Timer再发玩家请求。
+
+### 当前覆盖边界
+
+- 可执行H子项：H1、H2a/b、H3及H3-F1/F2/F3、H4、H5a/b/c/d、H6、H7a/b、H8、H9a/b/c/d。
+- 可执行J子项：J1a/b、J2、J3a/b。H4与J1a复用相同机制，但分别报告、独立环境。
+- H5a使用冻结Model中的正式gameConfig.validator，拒绝schema相同但建筑成本为负的候选；通过正式Luban生成，不破坏哈希伪装业务校验。
+- H3使用最多4条并行只读请求链，要求准备阶段至少一条客户端业务响应完成，再证明真实暂停期间有界新请求排队、恢复后响应及连接保持；准备过快未采到该证据也标not-effective。发送/收包/服务器生成时间分别保存，不以服务器生成时间替代客户端回包证据。H3-F1/F2/F3分别覆盖断线、队列饱和及客户端短超时，单独报告。
+- H5d在冻结Model设置不可替换的FixtureCommitGuard，坏候选把该方法排在已有方法之后，触发提交中途失败；核对旧配对继续处理业务，再验证合法候选仍可安装。H8使用已有outbound_lanes自定义指标和隔离Model的只读计数，不修改Core。
+- H/J已开始真实PG/Redis验收：此前H1/H2a/H2b与H3定向通过，run-8KTtrc的H4、H5a/b/c/d、H3-F1通过，H3-F2因周期指标取样时序标not-effective；后续结果以新报告为准。新增coverage已接入不代表运行已通过；完整passed仍要求全部项目三轮通过。
+
+### 30分钟关键路径
+
+固定3玩家、1轮、20项目；C内部为7个独立恢复子场景，非500玩家容量测试。
+
+| 顺序 | 项目 | 重点 |
+| --- | --- | --- |
+| 1 | A2、A3 | 真5分钟驻留过期、旧正缓存下冷恢复 |
+| 2 | B1、B3、B4 | 缓存写超时、PG不可用不回退缓存、DBProxy切换 |
+| 3 | C | 七种游戏崩溃恢复，核对资产与原回执 |
+| 4 | H1、H2a、H2b、H3 | 联合发布、代码单改、配置单改、暂停排队 |
+| 5 | H4、H5c、H6、H7a、H7b | 排空超时安全退出、坏哈希、回滚、任务/分钟边界 |
+| 6 | J1a、J1b、J2、J3a、J3b | 提交前后扣包、正确启动配对、客户端未知结果重试 |
+| 7 | 剩余窗口 | 三玩家每秒快照对账、每30秒一笔募兵，记录宿主指标 |
+
+1800秒从首个隔离环境完成初始化后开始，**包括后续环境启动和项目切换**。首次准备及最后清理耗时另记，不承诺整个命令墙钟恰好30分钟。关键用例跑不完、窗口未命中、必需断言失败均不通过；不会删用例或延长窗口凑通过。结束前2秒停止新负载，正常清理可超出测量截止时间。尚未执行/未选项目及缺项保留在report.json，失败即停止；不复用日常开发数据库。
+
+在packages/slg下：
+
+```powershell
+# 仅查看计划，不启动服务。 / Inspect only; no services.
+npm run test:acceptance -- plan --profile smoke30
+# 仅构建H/J正式候选，不启动Docker。 / Build H/J candidates without Docker.
+npm run test:acceptance -- build-hotfix
+# 控制器及正式客户端codec检查，不启动游戏/数据库。 / Controller and codec checks only.
+npm run test:acceptance-tools
+# 获准执行隔离验收后，构建完整制品并运行。 / Build and run after isolated acceptance is authorized.
+npm run test:acceptance -- build
+npm run test:acceptance -- check
+npm run test:acceptance -- run --profile smoke30 --confirm isolated-slg-authoritative-test
+```
+
+build-hotfix产物不能代替完整build.json：运行入口检查宿主、DB探针、镜像、全部候选文件和源码哈希。源码改变必须重建。报告位置为temp/authoritative-acceptance/run-*/report.json，含配置、启动包身份、DB帧证据、客户端帧/连接状态、暂停日志与清理结果。故障候选损坏只发生在隔离副本，绝不修改正式生成源、关闭指纹检查或手改协议锁。
+
+本轮验证：上一轮完成四配对及七种异常候选构建，14项工具测试通过。当前新增H5d候选、资源门槛、故障变体和90分钟入口的验证见下节；历史结果不代表当前真实故障通过。
+
+## 完整单轮夹具与90分钟预算
+
+`acceptance90`固定3玩家、全部42项目各一轮（C内部仍有7个恢复子场景）。90分钟是从首个环境就绪起计算的**预算上限**，包括后续环境切换；完成必需观察及对账后立即结束，不用空等凑90分钟。首次构建/镜像准备和最终清理另计。估计60～90分钟，尚无整轮实测耗时，超过预算或故障未命中不得通过。
+
+- B1～B6故障解除后各继续观察3分钟：每2秒核对三玩家已确认资产和回执，每30秒一笔募兵，保留DBProxy指标。
+- H8维持同一PID和客户端：两次预热各30秒；10次正式候选尝试，每次有效经济操作后稳定采样75秒；其中三次安排建筑任务并等自然结算，末尾再观察90秒。预计约16～18分钟，不属于500玩家容量测试。
+- H8每秒读取宿主指标并保存resource-metrics.jsonl。出站取`tiangz_scene_custom_metric_gauge{name="outbound_lanes",key="outbound_total_depth"}`，不能只搜索固定指标名判定缺失。隔离Model通过已有metricsSnapshot扩展只读pending/Timer/驻留/截止任务计数；指标缺失、采样断档、未收敛、增长越界均不能通过。
+- H8稳定窗口要求三名合法驻留对应三个回收Timer、零业务pending/截止任务/请求队列；全局Timer与预热基线比较，报告额外常驻Timer数。堆和RSS按上文中位数门槛，不要求主动GC或每次回落。
+- H3-F1在pauseStart后关闭原客户端，用新连接重放同一业务身份；H3-F3客户端1800毫秒超时，DB仍5秒，候选按3秒排空预算退出，确认SQL和原回执没有重复。
+- H3-F2保持默认总队列4096、数据通道3072，单独连接发送至多4096个正式SLG只读快照，客户端1200毫秒超时。必须同时看到frame队列峰值达到3072、背压计数增长和明确超时/断线；不能仅凭请求失败判定饱和。未命中记not-effective，绝不调小容量或无界加压凑通过。
+- H5d只检验方法安装失败时旧方法/Handler/配置保持完整及后续可发布；不宣称能撤销配置交换后的任意外部副作用。
+- H9b的真实协议变更也会改变Model包哈希；服务器可能先报modelFingerprint不兼容。夹具必须证明候选protocolFingerprint确实变化，并精确匹配首个被拒字段及双方哈希；此用例证明协议变更不能在线安装，不宣称单独覆盖越过Model检查后的协议检查分支。H3-F2饱和指标按周期发布，开始等待完整基线，结束有界等待本次突发的累计峰值/背压刷新，不能重复突发或把缺值当零。
+
+```powershell
+# 查看完整单轮预算，不启动服务。 / Inspect the full single-round budget without starting services.
+npm run test:acceptance -- plan --profile acceptance90
+# 获准执行隔离故障验收后运行；先完成完整build/check。 / Run after authorization and full build/check.
+npm run test:acceptance -- run --profile acceptance90 --confirm isolated-slg-authoritative-test
+```
+
+历史构建验证：H5d候选、冻结Model指标、SLG检查及框架回滚自测已通过；此前的18项工具测试是历史数量，当前以工具输出为准。真实轮次已运行，不能再将其概括为“尚未启动”。2026-09-17完整轮次在H3夹具处停止，修复后H3定向通过；后续H/J以各自报告为准，不等于90分钟整轮通过。
+
+## 八小时功能长稳 / Eight-hour functional endurance
+
+固定3名角色、同一套隔离PG/队列Redis/缓存Redis、两个DBProxy和一个游戏进程。不是500玩家容量测试；不修改日常开发或外网服务。测量从环境就绪后开始，准备、最终冷恢复和清理另记。
+
+| 时间 | 内容 |
+| --- | --- |
+| 0～30分钟 | 持续经济操作和基线采样 |
+| 30～210分钟 | 每15分钟一次合法配对、回滚或坏候选拒绝，核对配置指纹、generation和资产 |
+| 210～330分钟 | 每25分钟依次注入缓存写暂停、缓存停机、DBProxy A强杀、PG停机、游戏进程重启；每次必须恢复并对账 |
+| 330～450分钟 | 同进程继续业务，检查恢复后的资源增长和队列收敛 |
+| 450～480分钟 | 停止新经济操作，继续读取、产粮及对账；测量结束再做冷恢复核对 |
+
+每10秒三角色快照，每分钟各募兵1名，每15分钟各抽卡一次；Alice每15分钟对四号地块派遣一级一号武将，固定战败返兵，保持地块可重复使用。建筑每30分钟尝试升级，达到5级停止，避免有限玩法耗尽使长稳伪失败。所有已接受命令立即使用同序号/同参数重放，未知结果也保留原命令；按整分钟核对产粮，独立验证回执、扣费、武将、行军返兵与建筑到期。至少1200笔成功操作、12次候选尝试及5次故障才可能通过。
+
+每5分钟将SQL记录、宿主堆/RSS/Timer/队列、容器资源及DBProxy指标写入observations.jsonl，并原子更新report.json；报告包含PID和最近采样时间，不能只凭status=running判定活跃。修复队列恢复限时60秒，磁盘至少保留5GiB，观察证据最多512MiB，单游戏日志最多256MiB，容器日志各10MiB×3。恢复期至少20个空闲资源样本，同一PID比较Timer与内存增长；不通过重启隐藏该阶段增长。此处资源样本是5分钟点采样，不能冒充H8每秒连续稳定窗口。
+
+```powershell
+# 源码变更后重新正式构建，再做五分钟实库自检。 / Rebuild changed sources, then run the five-minute real-storage preflight.
+npm run test:acceptance -- build
+npm run test:soak -- --profile smoke5 --confirm isolated-slg-authoritative-test
+# 提供覆盖全部H/J通过项的报告；程序检查覆盖并记录文件哈希。 / Supply reports covering all passed H/J cases; the runner records report hashes.
+npm run test:soak -- --profile soak8h --confirm isolated-slg-authoritative-test --hj-reports "<report1.json>,<report2.json>"
+```
+
+报告位于temp/authoritative-acceptance/soak8h-*/report.json，自检位于smoke5-*。需要停止时在对应目录创建空文件STOP，控制器会协作退出、收尾并标记cancelled；Windows不要靠强杀Node冒充正常停止。首次失败报告和数据库卷保留，不覆盖历史结果。H/J报告覆盖门禁只检查实际passed项目，制品来源仍需结合报告artifacts核对，不能拿其他版本报告冒充当前验证。
+
+2026-09-18短时实测：`smoke5-GUPRFU/report.json`为`smoke5-passed`，137次快照、20笔业务、20次原命令重放、13次对账、1次热更和1次实际缓存写故障，最终冷恢复与全部清理成功。计时302464ms包含当时脚本末尾冷恢复；新版已单列测量结束和冷恢复结束时间。此自检只跑一次P22发布和缓存暂停，不冒充八小时五种故障及内存增长验收。当前工具测试20项、恢复工具2项、游戏及持久化规则29项和SLG check通过。
+
+### 2026-09-18 H/J前置结果 / H/J preflight results
+
+下列目录均位于`temp/authoritative-acceptance`，以各目录`report.json`逐项状态为证据。前几批因其他子项首次失败而整体停止，其已通过项仍有完整清理记录；不覆盖失败报告，也不把这些分批记录说成一次完整矩阵通过。
+
+| 报告目录 | 通过范围 |
+| --- | --- |
+| run-8KTtrc | H4、H5a/b/c/d、H3-F1 |
+| run-JP9R5Z | H3-F2/F3、H6、H7a/b、H9a |
+| run-0YDqnf | H9b/c/d、J1a/b、J2、J3a/b、H1、H2a/b |
+| run-gOw29M | H3连续三轮；准备阶段客户端回包分别3/4/3条 |
+| run-xSvyRq | H8：10次正式候选尝试、992个连续样本、清理全部成功 |
+
+H8预热基线窗口RSS中位数55472128字节、堆4301872字节；最终90秒窗口RSS中位数58359808字节、堆4835248字节；Timer均为3，稳定窗口及增长门槛通过。各批源码指纹已逐文件比较：宿主、DBProxy、SLG业务源码一致，差异仅为验收工具与package.json脚本入口。
+
+八小时控制器已于北京时间2026-09-18 01:05:42后台启动，PID 27472，报告`soak8h-Bkzmwd/report.json`，日志启动索引`launch8h-20260918-010542.json`。实际测量起止以报告measurementStartedAt/measurementDeadline为准，准备时间不算八小时。每5分钟自动对账与采样，遇断言失败即收尾并保留证据；当前不能宣称八小时通过。
+
+实际测量窗口：北京时间2026-09-18 01:06:31至09:06:31，随后冷恢复及清理另计。首个样本于01:06:39写入，3笔已确认业务与原命令重放通过，状态running；最终结论必须读取结束后的report.json。
+
+### 八小时结束后的采样回归 / Post-soak sampling regression
+
+2026-09-18三小时验收已通过：`temp/authoritative-acceptance/soak3h-ArIYAT/report.json`，控制器PID 3108，测量窗口北京时间10:56:39至13:56:40，实测180.019分钟；冷恢复13:56:41完成，13:57:04清理完成。 / The three-hour acceptance passed: controller PID 3108 measured 10:56:39–13:56:40 China time for 180.019 minutes; cold recovery completed at 13:56:41 and cleanup at 13:57:04.
+
+结果：`soak3h-passed`；534笔业务及原命令重放、109次对账、12次热更、5类故障全部恢复、30个恢复资源样本（门槛20），同一游戏PID、定时器恒为3、恢复窗口无非空闲样本；缓存暂停/停止、节点终止、PostgreSQL停止、游戏重启的恢复耗时分别为2592/12190/6498/20701/1784ms，清理状态为game/proxies/probe/storage全部stopped。25项工具测试、正式构建和H/J覆盖门禁在启动前通过。 / Result: `soak3h-passed`; 534 operations and replays, 109 reconciliations, 12 hotfix candidates, all five fault recoveries, and 30 recovery resource samples against the unchanged threshold of 20. The same game PID and three timers were retained, with no non-idle recovery samples. Recovery elapsed times for cache pause/stop, node kill, PostgreSQL stop and game restart were 2592/12190/6498/20701/1784 ms; all cleanup targets stopped. The 25 tool tests, official build and H/J coverage gate passed before launch.
+
+三小时方案 `soak3h`：0–10分钟基线、10–70分钟热更（每5分钟一次，至少12次）、70–110分钟五类故障（每8分钟一次）、110–170分钟同进程恢复观察、170–180分钟收敛，结束后冷恢复及清理另计。每2分钟对账采样；恢复期计划30个时隙，仍要求至少20个有效样本、同PID和原增长上限；至少450笔业务且全部五类故障成功恢复。保持全部H/J通过报告前置检查，使用3名角色的本地隔离环境。运行命令为 `node tools/soak_acceptance.mjs --profile soak3h --confirm isolated-slg-authoritative-test --hj-reports "<report1.json>,<report2.json>"`。 / The three-hour profile preserves twelve hotfix attempts, all five faults, a continuous one-hour recovery window and the unchanged twenty-sample growth gate, with two-minute sampling and at least 450 operations. Final cold recovery and cleanup follow the measured duration; H/J preflight evidence remains required.
+
+2026-09-18短时采样回归已通过：`sampling10-rd6WDP/report.json`为`sampling10-passed`，北京时间10:36:32开始测量，实测601201ms，10:46:54完成清理；21个有效资源样本通过原20个门槛、同PID及增长检查，26笔业务及26次原命令重放、29次对账、233次快照，最终冷重启恢复通过，游戏/代理/探针/存储全部停止。正式构建与24项工具测试通过；历史样本回放确定复现原18/20失败。本轮仅验证采样修复，未执行热更和五种故障，未启动新八小时测试，原八小时失败报告保持不变。 / The ten-minute sampling regression passed with 21 valid samples against the unchanged 20-sample threshold, same-process growth checks, 26 operations and replays, 29 reconciliations, 233 snapshots, final cold recovery and complete cleanup. The official build and all 24 tool tests passed, including replay of the original 18/20 failure. This verifies sampling only; no new eight-hour soak was started.
+
+`soak8h-Bkzmwd/report.json`最终为failed，09:06:53完成全部清理。1428笔操作及原命令重放、113次对账、12次候选尝试和5种故障恢复已执行，失败点是恢复期23个点样本被过滤为18个，未达20个门槛；资源增长断言与末尾冷恢复尚未执行。旧报告不修改为通过。
+
+修复后基线/恢复采样每次最多等待60秒，要求两个不同发布周期的指标连续空闲；全部观察写入resource-settling证据，持续忙碌、指标不刷新或缺失均失败。保持原20个有效样本门槛，按固定时隙推进，并在运行中核对剩余时隙是否足够；恢复期结束立即验证数量、同PID及增长，不再拖至整轮结束。报告包含recoverySampling进度与resourceWindows。
+
+`sampling10`为专门的10分钟实库回归：同一隔离环境前8分钟每20秒安排采样，仍要求至少20个有效样本；用真实建筑倒计时证明存在非空闲指标，等待自然收敛；后2分钟停止新经济操作，结束后执行冷恢复和清理。它不运行五种故障，也不替代八小时耐久证据。原23样本另保存在tools/acceptance/fixtures/soak-resource-20260918.json，工具测试直接复现18/20失败，同时覆盖持续忙碌、冻结指标、重复快照、数量不足和PID变化。
+
+```powershell
+# 获准短时实库回归后执行。 / Run the authorized short real-storage regression.
+node --test tools/acceptance/*.test.mjs
+node tools/authoritative_acceptance.mjs build
+node tools/soak_acceptance.mjs --profile sampling10 --confirm isolated-slg-authoritative-test
+```

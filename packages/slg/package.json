@@ -6,7 +6,8 @@
   "engines": { "node": "24.x" },
   "scripts": {
     "test:acceptance": "node tools/authoritative_acceptance.mjs",
-    "test:acceptance-tools": "node --test tools/recovery.test.mjs tools/acceptance/acceptance.test.mjs",
+    "test:soak": "node tools/soak_acceptance.mjs",
+    "test:acceptance-tools": "node --test tools/recovery.test.mjs tools/acceptance/*.test.mjs",
     "test:recovery": "node tools/recovery.mjs",
     "test:gameplay": "node --test tools/gameplay.test.mjs tools/gameplay-persistence.test.mjs tools/foreground.test.mjs",
     "delivery": "node tools/delivery/pipeline.mjs",

@@ -102,3 +102,11 @@ docs/                              架构边界、开发流程与验收说明
 Creator 命令与构建退出码依据：[官方命令行发布说明](https://docs.cocos.com/creator/3.8/manual/en/editor/publish/publish-in-command-line)。
 
 默认PG读取的A/B/C/D隔离夹具现已提供：`npm.cmd run test:acceptance`只输出计划，`npm.cmd run test:acceptance-tools`检查工具；完整构建与经授权执行方法见[权威读取验收计划](docs/authoritative-read-acceptance.md)。夹具就绪不等于实库验收通过。
+
+### SLG热更与30分钟关键路径 / SLG hotfix and 30-minute profile
+
+查看计划：`npm run test:acceptance -- plan --profile smoke30`。独立构建热更夹具：`npm run test:acceptance -- build-hotfix`；纯工具检查：`npm run test:acceptance-tools`。默认不启动服务。覆盖、缺项、完整构建和授权运行命令见[权威恢复验收](docs/authoritative-read-acceptance.md#hj夹具实施与30分钟入口2026-09-17)。此profile为3玩家关键路径，不代表500玩家或完整三轮验收。
+
+完整单轮计划：`npm run test:acceptance -- plan --profile acceptance90`。42项目、3玩家、90分钟预算上限，B组恢复后各观察3分钟，H8同进程观察约16～18分钟；完成即结束。构建和纯工具检查不代表真实故障验收通过。
+
+八小时功能长稳入口为`npm run test:soak -- --profile soak8h --confirm isolated-slg-authoritative-test --hj-reports "<report1.json>,<report2.json>"`，启动前要求全部H/J通过证据，并先执行`--profile smoke5`自检。每5分钟写入`temp/authoritative-acceptance/soak8h-*/report.json`与`observations.jsonl`；创建该目录下的`STOP`文件可协作停止。固定3名角色，具体负载、故障时间表和通过门槛见[八小时计划](docs/authoritative-read-acceptance.md#八小时功能长稳--eight-hour-functional-endurance)。

@@ -239,7 +239,8 @@ try {
 finally {
   try { await stopGame(false); report.cleanup.game = 'stopped'; } catch (e) { report.cleanup.game = String(e); report.status = 'failed'; process.exitCode = 1; }
   try { await proxy?.close(); } catch (e) { report.cleanup.proxy = String(e); report.status = 'failed'; process.exitCode = 1; }
-  if (startedStorage) { try { await compose('stop'); report.cleanup.storage = 'stopped; isolated containers and volumes retained'; } catch (e) { report.cleanup.storage = String(e); report.status = 'failed'; process.exitCode = 1; } }
+  // 删除本轮容器和网络，保留命名卷供报告复核；长期保留网络会耗尽Docker地址池。 / Remove this run's containers and network while retaining named volumes for evidence; stale networks exhaust Docker's address pools.
+  if (startedStorage) { try { await compose('down', '--remove-orphans'); report.cleanup.storage = 'stopped; isolated volumes retained'; } catch (e) { report.cleanup.storage = String(e); report.status = 'failed'; process.exitCode = 1; } }
   if (proxy) await writeFile(path.join(directory, 'rpc-events.json'), JSON.stringify(proxy.events, null, 2));
   report.finishedAt = new Date().toISOString(); await save(); console.log(`[slg-recovery] ${report.status}: ${directory}/report.json`);
   if (process.connected) process.disconnect();

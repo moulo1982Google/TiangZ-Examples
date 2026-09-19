@@ -142,10 +142,12 @@ export const scenarios = {
   },
   async D1(env) {
     const concurrent = await env.probe({ command: 'atomic_batch' });
-    const storage = await command(env.artifacts.authorityTest, ['--ignored', '--nocapture', '--test-threads=1'], { env: { ...process.env, ...env.probeEnv }, timeout: 60000 });
-    await writeFile(path.join(env.directory, 'sql-snapshot-probe.log'), storage);
+    // 独立存储测试使用自己的Publisher注册表，不能改写SLG的既有路由。 / Give the standalone storage test its own publisher registry without changing SLG routes.
+    await env.sql('CREATE DATABASE authority_probe');
+    const postgres = new URL(env.probeEnv.DBPROXY_POSTGRES_URL); postgres.pathname = '/authority_probe';
+    const storage = await command(env.artifacts.authorityTest, ['--ignored', '--nocapture', '--test-threads=1'], { env: { ...process.env, ...env.probeEnv, DBPROXY_POSTGRES_URL: postgres.href }, timeout: 60000, logFile: path.join(env.directory, 'sql-snapshot-probe.log') });
     assert.match(storage, /1 passed/);
-    return { concurrent, sqlSnapshotProbe: 'sql-snapshot-probe.log', scope: 'SLG-isolated records; official backend test verifies one PG operation for default batch' };
+    return { concurrent, sqlSnapshotProbe: 'sql-snapshot-probe.log', scope: 'SLG atomic batch probe plus official backend test in a separate authority_probe database; verifies one PG operation for default batch' };
   },
   async D2(env) {
     const e = await oldCache(env); const record = env.record();
