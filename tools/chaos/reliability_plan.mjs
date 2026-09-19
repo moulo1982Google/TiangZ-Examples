@@ -23,12 +23,15 @@ export function parseArguments(argv) {
   }
   const suite = values.get("--suite") ?? "all";
   if (suite !== "all" && !Object.hasOwn(suites, suite)) throw Error("unknown suite");
-  const seconds = Number(values.get("--seconds") ?? 3600), players = Number(values.get("--players") ?? 100);
+  // 写法长稳的排队写间隔随玩家数增长，默认用已验证的10人，避免100人时一轮拖到数小时。
+  // The write-mode soak's queued interval grows with players; default to the validated 10 so a cycle does not take hours.
+  const seconds = Number(values.get("--seconds") ?? 3600), players = Number(values.get("--players") ?? (suite === "write-modes" ? 10 : 100));
   if (!Number.isInteger(seconds) || seconds < 600 || seconds > 14400) throw Error("seconds must be 600..14400 per DB/game suite");
   if (!Number.isInteger(players) || players < 2 || players > 200) throw Error("players must be 2..200");
   if (action === "run" && values.get("--confirm") !== confirmation) throw Error(`run requires --confirm ${confirmation}`);
   if (suite === "slg" && (values.has("--seconds") || values.has("--players"))) throw Error("slg uses a fixed small correctness matrix; no load/soak parameters");
-  // 一整轮七类故障约14分钟；不足时引擎控制器也会拒绝，这里提前失败。 / One seven-fault cycle takes ~14 minutes; fail early here as the engine controller would.
+  // 负载窗口须覆盖七类故障的估算（约14分钟）；不足时引擎控制器也会拒绝，这里提前失败。实际耗时因两轮恢复等待更长。
+  // The load window must cover the ~14-minute seven-fault estimate; fail early as the engine would. Real runs take longer because of recovery rounds.
   if (suite === "write-modes" && (seconds < 900 || players > 100)) throw Error("write-modes requires seconds 900..14400 and players 2..100");
   return { action, selected: suite === "all" ? ["hotfix", "dbproxy", "game"] : [suite], seconds, players };
 }
