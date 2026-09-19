@@ -8,7 +8,7 @@
 
 新增显式选择的 `--suite slg`：[SLG小规模恢复](../../packages/slg/docs/recovery-test.md)。三个玩家，独立新建存储，不使用旧prepare清库；保留原game组，all仍只选原三组。先通过小规模正确性，再另行讨论500玩家长稳。
 
-新增显式选择的 `--suite write-modes`：`.native`持久化写法（普通CAS、`@queued`、`@transactional`）长稳，控制器由引擎维护（`../TiangZ/tools/persistence_write_modes_soak.mjs`），本入口只编排，不进入all。控制器自己持有同一把`reliability.lock`；只重建专用PG中的`dbproxy_write_modes_soak`库并清空两只演练Redis的库号5，不触碰其他组的数据。注入PG、可靠Redis、缓存、AOF、首选/全部DBProxy节点、探针进程七类故障，每次故障后要求每个玩家每种写法再确认两次，最后排空排队积压并直接查PG对账。一整轮约14分钟，`--seconds`须在900..14400之间；`build`只编译引擎宿主与DBProxy服务端，夹具模块在运行时从当前源码构建。不接触容器的`npm run test:write-modes-smoke`在引擎根目录执行。2026-09-19只执行了单测与smoke，`run`尚未执行。
+新增显式选择的 `--suite write-modes`：`.native`持久化写法（普通CAS、`@queued`、`@transactional`）长稳，控制器由引擎维护（`../TiangZ/tools/persistence_write_modes_soak.mjs`），本入口只编排，不进入all。控制器自己持有同一把`reliability.lock`；只重建专用PG中的`dbproxy_write_modes_soak`库并清空两只演练Redis的库号5，不触碰其他组的数据。注入PG、可靠Redis、缓存、AOF、首选/全部DBProxy节点、探针进程七类故障，每次故障后要求每个玩家每种写法再确认两次，最后排空排队积压并直接查PG对账。一整轮约14分钟，`--seconds`须在900..14400之间；`build`只编译引擎宿主与DBProxy服务端，夹具模块在运行时从当前源码构建。不接触容器的`npm run test:write-modes-smoke`在引擎根目录执行。2026-09-19首轮`run`（900秒）在可靠Redis故障后失败：排队写吞吐远低于探针负载而形成自我维持的过载，账本0违例；原因与处理见引擎AI手册失败教训表，尚未通过。
 
 | 组 | 实际执行内容 | 注入范围 |
 | --- | --- | --- |
