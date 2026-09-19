@@ -36,7 +36,7 @@ test("SLG is explicit and cannot silently become a load test", () => {
 });
 test("write-mode soak is explicit, engine-owned and budgeted for a full fault cycle", () => {
   assert.deepEqual(parseArguments(["plan", "--suite", "write-modes"]).selected, ["write-modes"]);
-  assert.equal(parseArguments(["plan", "--suite", "write-modes"]).players, 10);
+  assert.equal(parseArguments(["plan", "--suite", "write-modes"]).players, 20);
   assert.equal(parseArguments(["plan", "--suite", "game"]).players, 100);
   assert.equal(parseArguments([]).selected.includes("write-modes"), false);
   assert.throws(() => parseArguments(["plan", "--suite", "write-modes", "--seconds", "600"]), /900/);

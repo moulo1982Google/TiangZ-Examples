@@ -23,9 +23,9 @@ export function parseArguments(argv) {
   }
   const suite = values.get("--suite") ?? "all";
   if (suite !== "all" && !Object.hasOwn(suites, suite)) throw Error("unknown suite");
-  // 写法长稳的排队写间隔随玩家数增长，默认用已验证的10人，避免100人时一轮拖到数小时。
-  // The write-mode soak's queued interval grows with players; default to the validated 10 so a cycle does not take hours.
-  const seconds = Number(values.get("--seconds") ?? 3600), players = Number(values.get("--players") ?? (suite === "write-modes" ? 10 : 100));
+  // 写法长稳默认用已验证的20个虚拟玩家；游戏组默认100人不适用于它。
+  // The write-mode soak defaults to its validated 20 virtual players; the game suites' 100 does not apply.
+  const seconds = Number(values.get("--seconds") ?? 3600), players = Number(values.get("--players") ?? (suite === "write-modes" ? 20 : 100));
   if (!Number.isInteger(seconds) || seconds < 600 || seconds > 14400) throw Error("seconds must be 600..14400 per DB/game suite");
   if (!Number.isInteger(players) || players < 2 || players > 200) throw Error("players must be 2..200");
   if (action === "run" && values.get("--confirm") !== confirmation) throw Error(`run requires --confirm ${confirmation}`);
