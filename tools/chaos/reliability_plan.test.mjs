@@ -34,6 +34,18 @@ test("SLG is explicit and cannot silently become a load test", () => {
   const result = spawnSync(process.execPath, [path.join(import.meta.dirname, "reliability.mjs"), "plan", "--suite", "slg"], { encoding: "utf8" });
   assert.equal(result.status, 0, result.stderr); assert.equal(JSON.parse(result.stdout).players, 3);
 });
+test("write-mode soak is explicit, engine-owned and budgeted for a full fault cycle", () => {
+  assert.deepEqual(parseArguments(["plan", "--suite", "write-modes"]).selected, ["write-modes"]);
+  assert.equal(parseArguments([]).selected.includes("write-modes"), false);
+  assert.throws(() => parseArguments(["plan", "--suite", "write-modes", "--seconds", "600"]), /900/);
+  assert.throws(() => parseArguments(["plan", "--suite", "write-modes", "--players", "150"]), /100/);
+  assert.equal(suites["write-modes"].actions.includes("probe-restart"), true);
+  const result = spawnSync(process.execPath, [path.join(import.meta.dirname, "reliability.mjs"), "plan", "--suite", "write-modes"], { encoding: "utf8" });
+  assert.equal(result.status, 0, result.stderr);
+  const plan = JSON.parse(result.stdout);
+  assert.equal(plan.status, "planned, not executed");
+  assert.deepEqual(plan.schedule.order, suites["write-modes"].actions);
+});
 test("partial coverage cannot pass even with a completed time window", () => {
   assert.throws(() => assertCoverage(suites.game.actions, ["map1"]), /coverage incomplete/);
   assert.doesNotThrow(() => assertCoverage(suites.dbproxy.actions, [...suites.dbproxy.actions, "postgres"]));

@@ -2,10 +2,25 @@ import { spawn } from "node:child_process";
 import { access, mkdir, mkdtemp, readFile, writeFile, open } from "node:fs/promises";
 import { createWriteStream } from "node:fs";
 import path from "node:path";
-import { parseArguments, suites, confirmation } from "./reliability_plan.mjs";
+import { parseArguments, suites, confirmation, writeModesConfirmation } from "./reliability_plan.mjs";
 import { root, engine, dbRoot, validationArtifacts } from "./validation_artifacts.mjs";
 
 const options = parseArguments(process.argv.slice(2));
+// 写法长稳归引擎维护：Examples只编排，控制器自己持有共用演练锁，这里不重复加锁。
+// The write-mode soak is engine-owned: Examples only orchestrates and the controller holds the shared drill lock itself.
+if (options.selected.length === 1 && options.selected[0] === "write-modes") {
+  const controller = path.join(engine, "tools/persistence_write_modes_soak.mjs");
+  const steps = options.action === "build"
+    ? [["cargo", ["build", "--bin", "TiangZ"], engine], ["cargo", ["build", "--release", "--locked", "--bin", "tiangz-dbproxy-server", "-j1"], dbRoot]]
+    : [[process.execPath, [controller, options.action, "--seconds", String(options.seconds), "--players", String(options.players),
+      ...(options.action === "run" ? ["--confirm", writeModesConfirmation] : [])], engine]];
+  for (const [file, args, cwd] of steps) {
+    const child = spawn(file, args, { cwd, windowsHide: true, stdio: "inherit" });
+    const code = await new Promise((resolve, reject) => { child.once("error", reject); child.once("close", resolve); });
+    if (code !== 0) process.exit(code ?? 1);
+  }
+  process.exit(0);
+}
 // SLG是显式选择的小规模恢复组；不进入旧MMORPG prepare/contracts清库控制器。
 if (options.selected.length === 1 && options.selected[0] === "slg") {
   const packageRoot = path.join(root, "packages/slg");

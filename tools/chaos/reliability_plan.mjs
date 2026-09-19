@@ -6,7 +6,12 @@ export const suites = Object.freeze({
   hotfix: { title: "Hotfix/config原子热更", actions: [], scope: "独立夹具：负载、跨进程、排队、坏候选、回滚和停机；不停止数据库" },
   dbproxy: { title: "DBProxy存储故障恢复", actions: ["postgres", "cache", "redis", "aof", "dbproxy1", "dbproxy2"], scope: "本机专用演练库/Redis及两个自有DBProxy节点；最终SQL/Stream对账" },
   game: { title: "游戏进程崩溃恢复", actions: ["map1", "map2", "map2-orphan", "location", "gate1", "gate2", "dynamic", "game-all"], scope: "只强杀自有游戏进程；数据库保持运行；同账号两轮恢复和交易复核" },
+  "write-modes": { title: "持久化写法长稳", actions: ["postgres", "redis", "cache", "aof", "dbproxy-primary", "dbproxy-all", "probe-restart"],
+    scope: "引擎控制器执行；专用演练容器中只使用独立库dbproxy_write_modes_soak与Redis库号5；普通CAS/@queued/@transactional三种写法负载、七类故障、恢复读取及PG直接对账" },
 });
+// 引擎写法长稳控制器的确认串；Examples 的 run 确认同时覆盖本组的专用数据清理与故障注入。
+// Engine write-mode soak confirmation; the Examples run confirmation also covers this suite's dedicated reset and faults.
+export const writeModesConfirmation = "reset-write-modes-soak-data-and-inject-faults";
 
 export function parseArguments(argv) {
   const [action = "plan", ...rest] = argv;
@@ -23,6 +28,8 @@ export function parseArguments(argv) {
   if (!Number.isInteger(players) || players < 2 || players > 200) throw Error("players must be 2..200");
   if (action === "run" && values.get("--confirm") !== confirmation) throw Error(`run requires --confirm ${confirmation}`);
   if (suite === "slg" && (values.has("--seconds") || values.has("--players"))) throw Error("slg uses a fixed small correctness matrix; no load/soak parameters");
+  // 一整轮七类故障约14分钟；不足时引擎控制器也会拒绝，这里提前失败。 / One seven-fault cycle takes ~14 minutes; fail early here as the engine controller would.
+  if (suite === "write-modes" && (seconds < 900 || players > 100)) throw Error("write-modes requires seconds 900..14400 and players 2..100");
   return { action, selected: suite === "all" ? ["hotfix", "dbproxy", "game"] : [suite], seconds, players };
 }
 
