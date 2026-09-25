@@ -22,6 +22,7 @@
     "server:start": "node tools/server.mjs start",
     "codegen:sdk": "node tools/codegen_sdk.mjs",
     "test": "vitest run",
+    "test:room": "node --test tools/room_consumer.test.mjs",
     "test:coverage": "vitest run --coverage",
     "sdk:sync": "node tools/clients.mjs sdk:sync",
     "sdk:check": "node tools/clients.mjs sdk:check",

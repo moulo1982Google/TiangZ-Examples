@@ -1,0 +1,60 @@
+syntax = "proto3";
+package room;
+
+message RoomSnapshot
+{
+  uint32 roomId = 1;
+  uint32 revision = 2;
+  repeated string memberIds = 3;
+}
+
+//ResponseType S2C_CreateRoom
+// @ets.msg protocol=Room method=CreateRoom
+message C2S_CreateRoom // IRequest
+{
+  string memberId = 1;
+  string resumeKey = 2;
+}
+message S2C_CreateRoom // IResponse
+{
+  RoomSnapshot snapshot = 1;
+}
+
+//ResponseType S2C_JoinRoom
+// @ets.msg protocol=Room method=JoinRoom
+message C2S_JoinRoom // IRequest
+{
+  uint32 roomId = 1;
+  string memberId = 2;
+  string resumeKey = 3;
+}
+message S2C_JoinRoom // IResponse
+{
+  RoomSnapshot snapshot = 1;
+}
+
+//ResponseType S2C_LeaveRoom
+// @ets.msg protocol=Room method=LeaveRoom
+message C2S_LeaveRoom // IRequest
+{
+  uint32 roomId = 1;
+  string memberId = 2;
+  string resumeKey = 3;
+}
+message S2C_LeaveRoom // IResponse
+{
+  RoomSnapshot snapshot = 1;
+}
+
+//ResponseType S2C_ResumeRoom
+// @ets.msg protocol=Room method=ResumeRoom
+message C2S_ResumeRoom // IRequest
+{
+  uint32 roomId = 1;
+  string memberId = 2;
+  string resumeKey = 3;
+}
+message S2C_ResumeRoom // IResponse
+{
+  RoomSnapshot snapshot = 1;
+}
