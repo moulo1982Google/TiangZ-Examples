@@ -2,17 +2,19 @@ import { mkdtemp, mkdir, readFile, writeFile, cp } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { createServer } from "node:net";
 import { spawn } from "node:child_process";
+import { pathToFileURL } from "node:url";
+import assert from "node:assert/strict";
 import path from "node:path";
 import os from "node:os";
 import { build } from "esbuild";
-import { loadGameModuleCatalog } from "../../TiangZ/tools/game_module_catalog.mjs";
-import { moduleNativeFingerprint } from "../../TiangZ/tools/module_native.mjs";
 
 const examples = path.resolve(import.meta.dirname, "..");
 const args = process.argv.slice(2);
 if (args.length && (args.length !== 2 || args[0] !== "--project" || !args[1])) throw new Error("Use --project <example-package-root>");
 const root = args.length ? path.resolve(args[1]) : examples;
 const engine = path.resolve(process.env.TIANGZ_ENGINE_ROOT ?? path.join(examples, "../TiangZ"));
+const { loadGameModuleCatalog } = await import(pathToFileURL(path.join(engine, "tools/game_module_catalog.mjs")));
+const { moduleNativeFingerprint } = await import(pathToFileURL(path.join(engine, "tools/module_native.mjs")));
 const catalog = await loadGameModuleCatalog({ projectRoot: engine, modulesDirectory: path.join(root, "modules") });
 const builtRoot = path.join(engine, "temp/module-native-build", catalog.graphHash);
 const manifest = JSON.parse(await readFile(path.join(builtRoot, "debug.manifest.json"), "utf8"));
@@ -25,6 +27,14 @@ await mkdir(path.join(temporary, "configs"));
 await cp(path.join(root, "dist"), path.join(temporary, "dist"), { recursive: true, filter: source => !source.includes(`${path.sep}coverage`) });
 await cp(path.join(root, "navigation"), path.join(temporary, "navigation"), { recursive: true });
 const config = JSON.parse(await readFile(path.join(root, "configs/local/all-in-one.json"), "utf8"));
+// 临时启动配置仍读取同一份显式部署包，不能因移动配置文件丢失相对路径。
+// Keep deployment sources relative to their original configuration, not the temporary copy.
+if (config.process.dataPacks?.sources) config.process.dataPacks.sources = config.process.dataPacks.sources.map(source => path.resolve(root, "configs/local", source));
+const expectedPacks = await Promise.all((config.process.dataPacks?.sources ?? []).map(async source => {
+  const bytes = await readFile(source);
+  const pack = JSON.parse(bytes.toString("utf8"));
+  return { id: pack.id, ownerModuleId: pack.ownerModuleId, fileHash: createHash("sha256").update(bytes).digest("hex") };
+}));
 config.process.name = "mmorpg-extraction-smoke";
 config.process.identity.workerId = 91;
 config.process.logging.file.enabled = false;
@@ -49,18 +59,27 @@ try {
     try { const response = await fetch(`http://127.0.0.1:${config.process.observability.health.port}/ready`, { signal: AbortSignal.timeout(500) }); if (response.ok) break; } catch {}
     await new Promise(resolve => setTimeout(resolve, 100));
   }
+  const identityResponse = await fetch(`http://127.0.0.1:${config.process.observability.health.port}/runtime-identity`, { signal: AbortSignal.timeout(3000) });
+  assert.equal(identityResponse.status, 200);
+  const identity = await identityResponse.json();
+  assert.equal(identity.process, config.process.name);
+  assert.deepEqual(identity.dataPacks, expectedPacks);
+  await writeFile(path.join(temporary, "runtime-identity.json"), JSON.stringify(identity, null, 2) + "\n");
   const probe = spawn(process.execPath, [path.join(temporary, "client.cjs"), "websocket", "127.0.0.1", String(config.scenes[0].port), "1", "10000"], { cwd: temporary, windowsHide: true, stdio: "inherit" });
   const timeout = setTimeout(() => probe.kill(), 45000);
   const result = await new Promise((resolve, reject) => { probe.once("exit", resolve); probe.once("error", reject); }).finally(() => clearTimeout(timeout));
   if (result !== 0) throw Error(`Client smoke failed (${result})\n${logs}`);
-  console.log("MMORPG module real login/map/logout smoke passed; no existing process or DB was used.");
 } finally {
   if (!exited) child.stdin.end("shutdown\n");
-  const timeout = setTimeout(() => { if (!exited) child.kill(); }, 10000);
-  await completion; clearTimeout(timeout);
+  let forced = false;
+  const timeout = setTimeout(() => { if (!exited) { forced = true; child.kill(); } }, 15000);
+  const exitCode = await completion; clearTimeout(timeout);
   await writeFile(path.join(temporary, "runtime.log"), logs);
+  await writeFile(path.join(temporary, "shutdown.json"), JSON.stringify({ exitCode, forced }) + "\n");
   console.log(`Isolated smoke artifacts: ${temporary}`);
+  if (forced || exitCode !== 0) throw Error(`Server did not shut down normally (forced=${forced}, exit=${exitCode})\n${logs}`);
 }
+console.log("MMORPG module login/map/logout, runtime data identity and graceful shutdown passed in an isolated process.");
 async function freePort() {
   const socket = createServer();
   await new Promise(resolve => socket.listen(0, "127.0.0.1", resolve));

@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "TiangZ"
-version = "0.6.0-alpha.0"
+version = "0.6.2"
 dependencies = [
  "anyhow",
  "base64 0.23.1",
@@ -14,6 +14,7 @@ dependencies = [
  "deno_error",
  "deno_inspector_server",
  "futures-util",
+ "getrandom 0.3.4",
  "opentelemetry",
  "opentelemetry-otlp",
  "opentelemetry_sdk",
@@ -2858,7 +2859,8 @@ dependencies = [
 
 [[package]]
 name = "tiangz-dbproxy-client"
-version = "0.6.0"
+version = "0.6.2"
+source = "git+https://github.com/moulo1982Google/TiangZ-DBProxy.git?tag=v0.6.2#e9963d2e08fd64bd5c3dca04e434705a6222af83"
 dependencies = [
  "async-trait",
  "thiserror 2.0.19",
@@ -2869,7 +2871,8 @@ dependencies = [
 
 [[package]]
 name = "tiangz-dbproxy-core"
-version = "0.6.0"
+version = "0.6.2"
+source = "git+https://github.com/moulo1982Google/TiangZ-DBProxy.git?tag=v0.6.2#e9963d2e08fd64bd5c3dca04e434705a6222af83"
 dependencies = [
  "async-trait",
  "serde",
@@ -2879,7 +2882,8 @@ dependencies = [
 
 [[package]]
 name = "tiangz-dbproxy-protocol"
-version = "0.6.0"
+version = "0.6.2"
+source = "git+https://github.com/moulo1982Google/TiangZ-DBProxy.git?tag=v0.6.2#e9963d2e08fd64bd5c3dca04e434705a6222af83"
 dependencies = [
  "prost",
  "prost-build",

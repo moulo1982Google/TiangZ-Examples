@@ -9,13 +9,13 @@
     "skipLibCheck": true,
     "paths": {
       "#tiangz/core": [
-        "../../../../../TiangZ/app/core/public.ts"
+        "../../../../../TiangZ-0.7/app/core/public.ts"
       ],
       "#tiangz/domains": [
-        "../../../../../TiangZ/app/model/domains/public.ts"
+        "../../../../../TiangZ-0.7/app/model/domains/public.ts"
       ],
       "#tiangz/model": [
-        "../../../../../TiangZ/app/model/public.ts"
+        "../../../../../TiangZ-0.7/app/model/public.ts"
       ],
       "#tiangz/module": [
         "./src/model/index.ts"

@@ -1,0 +1,41 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { mkdtemp, readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
+import os from "node:os";
+import { execFileSync, spawnSync } from "node:child_process";
+
+const examples = path.resolve(import.meta.dirname, "..");
+const tool = path.join(examples, "packages/mmorpg/tools/map_deployment.mjs");
+
+test("official map deployment generation/check is deterministic and refuses invalid or stale input", async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "tiangz-map-deployment-"));
+  const input = path.join(directory, "map input.json"), output = path.join(directory, "map output", "runtime.pack.json");
+  const payload = { formatVersion: 1, mapHosts: [{ sceneName: "fixture", staticMapIds: [1], acceptDynamicMaps: false }] };
+  await writeFile(input, JSON.stringify(payload));
+  const args = [tool, "--input", input, "--output", output];
+  const run = (...extra) => execFileSync(process.execPath, [...args, ...extra], { cwd: directory, windowsHide: true, timeout: 10_000, encoding: "utf8" });
+  run();
+  const first = await readFile(output, "utf8");
+  const pack = JSON.parse(first);
+  assert.equal(pack.id, "org.tiangz.mmorpg.map-deployment");
+  assert.deepEqual(pack.payload, payload);
+  run();
+  assert.equal(await readFile(output, "utf8"), first);
+  run("--check");
+  payload.mapHosts[0].acceptDynamicMaps = true;
+  await writeFile(input, JSON.stringify(payload));
+  const stale = spawnSync(process.execPath, [...args, "--check"], { cwd: directory, windowsHide: true, timeout: 10_000, encoding: "utf8" });
+  assert.equal(stale.status, 1);
+  assert.match(stale.stderr, /stale/);
+  assert.equal(await readFile(output, "utf8"), first, "check must never repair the output");
+  payload.mapHosts.push(payload.mapHosts[0]);
+  await writeFile(input, JSON.stringify(payload));
+  const invalid = spawnSync(process.execPath, args, { cwd: directory, windowsHide: true, timeout: 10_000, encoding: "utf8" });
+  assert.equal(invalid.status, 1);
+  assert.match(invalid.stderr, /duplicate map host/);
+  assert.equal(await readFile(output, "utf8"), first, "invalid data cannot overwrite the last valid pack");
+  const badName = spawnSync(process.execPath, [tool, "--input", input, "--output", path.join(directory, "wrong.runtime.pack.json")], { cwd: directory, windowsHide: true, timeout: 10_000, encoding: "utf8" });
+  assert.equal(badName.status, 1);
+  assert.match(badName.stderr, /separate runtime\.pack\.json/);
+});

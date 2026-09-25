@@ -4,6 +4,10 @@
 
 当前 MMORPG 的 check 沿用生成后类型检查流程，会刷新模块生成物但不修改协议锁；SLG 的 check 为只读一致性检查。共享模块的生成/构建操作应串行运行。
 
+0.7 候选把地图部署放在 `configs/local/map-deployment.json`，`setup/build` 用模块自己的强类型校验生成 `map-deployment/runtime.pack.json`，`check/start/smoke` 检查是否过期。Process 只引用通用数据包；地图规则仍属于本模块。修改部署后重新构建并重启，不能通过 Hotfix 更改拓扑。旧配置的 `staticMapIds/acceptDynamicMaps` 暂仍接受；同时提供新旧值时必须完全一致，声明包缺少当前 MapHost 时拒绝启动。
+
+联合开发显式设置 `TIANGZ_ENGINE_ROOT`，并把 `modules/mmorpg/rust/Cargo.toml` 中的 TiangZ 路径对齐到同一宿主。本候选已对齐相邻 `TiangZ-0.7` worktree；发布布局冻结时需重新生成路径与制品，不能将 worktree 路径视为已发布依赖。Native 组合构建拒绝同版本的其他宿主源。
+
 - `tiangz.example.json`、`package.json`、`tools/workspace.mjs`：手写包入口。
 - `configs/local/all-in-one.json`：本包运行配置，普通启动使用该配置的固定端口；启动前确认没有冲突。
 - `modules/`：构建时显式安装 MMORPG、Bench 根联接，不提交 Git，不自动扫描其他示例。

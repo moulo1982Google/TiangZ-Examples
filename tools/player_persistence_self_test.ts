@@ -129,6 +129,9 @@ async function testGeneratedRepositoryRetriesTheSameRequest(): Promise<void> {
 }
 
 class RetryEntityTransport implements DbProxyTransport {
+  // 纯内存替身每次调用立即完成，没有物理 I/O 等待；真实 Transport 必须自己实现期限。
+  // Every call in this memory-only double settles immediately; real transports must enforce deadlines.
+  readonly supportsRequestTimeout = true;
   readonly requests: DbProxySnapshotWrite[] = [];
 
   load(_record: DbProxyRecordKey): Promise<DbProxySnapshotEnvelope | undefined> { return Promise.resolve(undefined); }

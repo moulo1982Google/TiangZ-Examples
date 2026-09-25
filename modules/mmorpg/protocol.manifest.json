@@ -15,12 +15,12 @@
   "locks": {
     "opcode": {
       "path": "proto/opcode.lock.json",
-      "sha256": "afcc441773c77967d9630f2e0af05d209da72a4a1e0ff74dac9476605f1ba5de",
+      "sha256": "cb2b5fa48d5dd3aca1fd03fee4daa9d560c6002870e7e6bedc9a228c6280fbc9",
       "entries": 208
     },
     "schema": {
       "path": "proto/schema.lock.json",
-      "sha256": "2f56775c58b914bc345a348dece734cba13260b995458c60e3e4c9fd342a87fb",
+      "sha256": "67be65ed9a3f674c14d449429e9244a80662d350927b7d768f6bfadefe77f552",
       "entries": 245
     }
   },

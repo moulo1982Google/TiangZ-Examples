@@ -1,11 +1,13 @@
 import {
   EntryScene,
+  RuntimeDataPackRegistry,
   entryScene,
   applyEntityExtensions,
   type RuntimeEntrySceneConfig,
   type SceneMetricsSnapshot,
 } from "#tiangz/core";
 import { MapHostComponent } from "../mapHost/MapHostComponent";
+import { MAP_DEPLOYMENT_PACK_ID, ResolveMapHostDeployment } from "../mapHost/MapHostDeployment";
 import { MapContentProfileComponent } from "../map/MapContentProfileComponent";
 import { PlayerDirectoryComponent } from "../mapHost/PlayerDirectoryComponent";
 import { DynamicMapLifecycleComponent } from "../mapHost/DynamicMapLifecycleComponent";
@@ -20,12 +22,16 @@ export class MapHostScene extends EntryScene {
 
 
   constructor(config: RuntimeEntrySceneConfig) {
+    // 在创建 Scene/组件前拒绝部署冲突，避免已开始的资源需要回滚。
+    // Reject deployment conflicts before constructing the Scene or its components.
+    const deployment = ResolveMapHostDeployment(config.self, RuntimeDataPackRegistry.Instance.TryGet(MAP_DEPLOYMENT_PACK_ID));
     super(config);
     this.AddComponent(PlayerDirectoryComponent);
     const mapContent = this.AddComponent(MapContentProfileComponent);
     this.mapHost = this.AddComponent(
       MapHostComponent,
       CreatePlayerRepository(config.process),
+      deployment,
     );
     this.AddComponent(DynamicMapLifecycleComponent);
     this.AddComponent(MapHostRegistrationComponent);

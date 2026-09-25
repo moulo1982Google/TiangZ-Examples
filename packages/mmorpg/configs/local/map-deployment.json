@@ -1,0 +1,8 @@
+{
+  "formatVersion": 1,
+  "mapHosts": [
+    { "sceneName": "map_1", "staticMapIds": [1], "acceptDynamicMaps": true },
+    { "sceneName": "map_2", "staticMapIds": [2, 100, 201], "acceptDynamicMaps": true },
+    { "sceneName": "dungeon_1", "staticMapIds": [], "acceptDynamicMaps": true }
+  ]
+}

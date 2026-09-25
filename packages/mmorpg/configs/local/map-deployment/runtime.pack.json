@@ -1,0 +1,33 @@
+{
+  "formatVersion": 1,
+  "id": "org.tiangz.mmorpg.map-deployment",
+  "ownerModuleId": "org.tiangz.mmorpg",
+  "contentHash": "2d5d480e087f6cc2d81dceb316ed96aa9980d874142eccf6f710041f44ecad6e",
+  "source": "packages/mmorpg/configs/local/map-deployment.json",
+  "payload": {
+    "formatVersion": 1,
+    "mapHosts": [
+      {
+        "sceneName": "map_1",
+        "staticMapIds": [
+          1
+        ],
+        "acceptDynamicMaps": true
+      },
+      {
+        "sceneName": "map_2",
+        "staticMapIds": [
+          2,
+          100,
+          201
+        ],
+        "acceptDynamicMaps": true
+      },
+      {
+        "sceneName": "dungeon_1",
+        "staticMapIds": [],
+        "acceptDynamicMaps": true
+      }
+    ]
+  }
+}

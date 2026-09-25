@@ -1,6 +1,7 @@
 {
   "process": {
     "name": "all",
+    "dataPacks": { "sources": ["map-deployment/runtime.pack.json"] },
     "identity": {
       "originServerId": 1,
       "workerId": 0
@@ -72,30 +73,18 @@
     {
       "name": "map_1",
       "sceneType": "MapHost",
-      "acceptDynamicMaps": true,
-      "staticMapIds": [
-        1
-      ],
       "ip": "127.0.0.1",
       "port": 7301
     },
     {
       "name": "map_2",
       "sceneType": "MapHost",
-      "acceptDynamicMaps": true,
-      "staticMapIds": [
-        2,
-        100,
-        201
-      ],
       "ip": "127.0.0.1",
       "port": 7302
     },
     {
       "name": "dungeon_1",
       "sceneType": "MapHost",
-      "acceptDynamicMaps": true,
-      "staticMapIds": [],
       "ip": "127.0.0.1",
       "port": 7310,
       "protocol": "tcp",
