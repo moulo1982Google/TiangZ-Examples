@@ -1,0 +1,5 @@
+# 生成清单含文本输入字节哈希，Windows/Linux 检出必须保持相同换行。
+# Generated manifests hash source bytes; keep checkout line endings stable across platforms.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf

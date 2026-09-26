@@ -7,7 +7,7 @@ declare module "../../../monster/MonsterComponent" {
     ActivateSpawn(spawnId: number): void;
     TriggerContentSignal(source: PlayerUnit, monsterId: number, signalId: number): boolean;
     DeactivateSpawn(spawnId: number): void;
-    CombatReadiness(monster: MonsterUnit): import("#tiangz/module").MonsterCombatReadiness;
+    CombatReadiness(monster: MonsterUnit): import("../../../public").MonsterCombatReadiness;
     Update10Hz(): void;
     Update5Hz(): void;
     Update1Hz(): void;

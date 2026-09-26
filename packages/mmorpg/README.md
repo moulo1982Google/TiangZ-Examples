@@ -6,7 +6,7 @@
 
 0.7 候选把地图部署放在 `configs/local/map-deployment.json`，`setup/build` 用模块自己的强类型校验生成 `map-deployment/runtime.pack.json`，`check/start/smoke` 检查是否过期。Process 只引用通用数据包；地图规则仍属于本模块。修改部署后重新构建并重启，不能通过 Hotfix 更改拓扑。旧配置的 `staticMapIds/acceptDynamicMaps` 暂仍接受；同时提供新旧值时必须完全一致，声明包缺少当前 MapHost 时拒绝启动。
 
-联合开发显式设置 `TIANGZ_ENGINE_ROOT`，并把 `modules/mmorpg/rust/Cargo.toml` 中的 TiangZ 路径对齐到同一宿主。本候选已对齐相邻 `TiangZ-0.7` worktree；发布布局冻结时需重新生成路径与制品，不能将 worktree 路径视为已发布依赖。Native 组合构建拒绝同版本的其他宿主源。
+默认布局为同级 `TiangZ/` 和 `TiangZ-Examples/`，本候选 Rust 依赖也使用该布局。联合开发显式设置 `TIANGZ_ENGINE_ROOT` 时，还必须把 `modules/mmorpg/rust/Cargo.toml` 中的 TiangZ 路径对齐到同一宿主，并用 Cargo 生成锁后重建。环境变量不会改写 Cargo 依赖；Native 组合构建拒绝同版本的其他宿主源。
 
 - `tiangz.example.json`、`package.json`、`tools/workspace.mjs`：手写包入口。
 - `configs/local/all-in-one.json`：本包运行配置，普通启动使用该配置的固定端口；启动前确认没有冲突。

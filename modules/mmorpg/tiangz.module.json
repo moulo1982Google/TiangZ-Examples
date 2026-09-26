@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "id": "org.tiangz.mmorpg",
-  "version": "0.6.0-alpha.0",
+  "version": "0.7.0-rc.1",
   "description": "Reusable MMORPG scenes, entities, protocols and native data; not part of the engine.",
-  "engine": { "minVersion": "0.6.0-alpha.0", "maxVersionExclusive": "0.7.0" },
+  "engine": { "minVersion": "0.7.0-rc.1", "maxVersionExclusive": "0.8.0" },
   "dependencies": [],
   "capabilities": ["game.mmorpg"],
   "entries": { "model": "src/model/index.ts", "hotfix": "src/hotfix/index.ts" },

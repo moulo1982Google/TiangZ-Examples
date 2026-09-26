@@ -1,6 +1,6 @@
 {
   "name": "tiangz-examples",
-  "version": "0.6.0-alpha.0",
+  "version": "0.7.0-rc.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -86,7 +86,7 @@
   "devDependencies": {
     "vitest": "5.0.0",
     "@vitest/coverage-v8": "5.0.0",
-    "@tiangz/dbproxy-sdk": "file:../TiangZ-DBProxy",
+    "@tiangz/dbproxy-sdk": "git+https://github.com/moulo1982Google/TiangZ-DBProxy.git#v0.7.0-rc.1",
     "@types/node": "^26.1.0",
     "esbuild": "^0.28.0",
     "pixi.js": "^8.9.2",
