@@ -86,6 +86,8 @@ TiangZ-ModuleGame 与 TiangZ-WoW335 用模块根目录联接安装 MMORPG，仅�
 
 ## 0.7 候选升级
 
+样例集版本为 `0.7.0-rc.2`，修正 SLG 生成 tsconfig 中残留的开发工作树路径；MMORPG/Bench 模块仍为 `0.7.0-rc.1`，SLG 模块仍为 `0.1.0`。在标准并列目录下重新执行各包构建后，受版本控制的生成文件应保持无差异。
+
 本候选使用 `TiangZ 0.7.0-rc.2`、DBProxy SDK `v0.7.0-rc.1`。MMORPG/Bench 模块范围为 `>=0.7.0-rc.1 <0.8.0`；SLG 保留自己的 `0.1.0` 版本，仅更新并验证宿主范围。不能把其他模块的范围自动放宽。
 
 发行布局是同一父目录下的 `TiangZ/` 和 `TiangZ-Examples/`。MMORPG 的 Rust 声明直接依赖这个宿主；设置 `TIANGZ_ENGINE_ROOT` 不会改写 Cargo 路径，两者必须指向同一源码身份。换布局时先调整自己工程的显式依赖，用 Cargo 生成锁再构建，不关闭 Native 身份检查。
