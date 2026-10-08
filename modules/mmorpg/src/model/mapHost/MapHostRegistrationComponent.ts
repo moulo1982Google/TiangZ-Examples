@@ -28,7 +28,7 @@ export class MapHostRegistrationComponent extends Component {
     this.mapHost.SetDynamicMapDisposedNotifier((assignment) => {
       this.QueueDynamicMapDisposed(assignment);
     });
-    if (!this.owner.self.acceptDynamicMaps) return;
+    if (!this.mapHost.AcceptDynamicMaps) return;
     this.owner.scenes.one("MapManager");
     this.NewRepeatedTimer(MAP_HOST_REPORT_INTERVAL_MS, "ReportToMapManager");
     this.NewOnceTimer(0, "ReportToMapManager");

@@ -4,9 +4,9 @@ import type { C2M_BuyNpcShopItem, C2M_SellItem, M2C_BuyNpcShopItem, M2C_OpenNpcS
 
 declare module "../../../shop/NpcShopComponent" {
   interface NpcShopComponent {
-    Open(player: import("#tiangz/module").PlayerUnit, npcUnitId: number): M2C_OpenNpcShop;
-    Buy(player: import("#tiangz/module").PlayerUnit, request: C2M_BuyNpcShopItem): Promise<M2C_BuyNpcShopItem>;
-    Sell(player: import("#tiangz/module").PlayerUnit, request: C2M_SellItem): Promise<M2C_SellItem>;
+    Open(player: import("../../../public").PlayerUnit, npcUnitId: number): M2C_OpenNpcShop;
+    Buy(player: import("../../../public").PlayerUnit, request: C2M_BuyNpcShopItem): Promise<M2C_BuyNpcShopItem>;
+    Sell(player: import("../../../public").PlayerUnit, request: C2M_SellItem): Promise<M2C_SellItem>;
   }
 }
 

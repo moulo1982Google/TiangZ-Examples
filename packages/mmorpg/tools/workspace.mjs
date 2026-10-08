@@ -15,6 +15,7 @@ function run(file, parameters) {
   if (result.error || result.status !== 0) throw result.error ?? new Error(`${file} failed (${result.status})`);
 }
 function server(command) { run(path.join(examples, "tools/server.mjs"), [command, ...args]); }
+run(path.join(root, "tools/map_deployment.mjs"), ["setup", "build"].includes(action) ? [] : ["--check"]);
 if (action === "setup" || action === "build") {
   for (const name of ["mmorpg", "bench"]) run(path.join(engine, "tools/link_game_module.mjs"),
     ["--source", path.join(examples, "modules", name), "--modules-dir", modules, "--name", name]);

@@ -11,10 +11,10 @@ declare module "../../../summon/SummonComponent" {
     GetOwnedUnit(owner: SummonOwnerUnit, ownershipSlot: number): SummonedUnit | undefined;
     Get(summonUnitId: number): SummonedUnit | undefined;
     GetAll(): readonly SummonedUnit[];
-    GetControlState(summonUnitId: number): import("#tiangz/module").OwnedUnitControlState | undefined;
+    GetControlState(summonUnitId: number): import("../../../public").OwnedUnitControlState | undefined;
     CommandOwnedUnit(owner: PlayerUnit, summonUnitId: number, command: OwnedUnitCommandValue, targetUnitId: number, abilityId?: number): boolean;
     AssistOwnerAgainst(owner: PlayerUnit, target: MonsterUnit): void;
-    OwnerLeaving(owner: SummonOwnerUnit): readonly import("#tiangz/module").AoiVisibilityDelta[];
+    OwnerLeaving(owner: SummonOwnerUnit): readonly import("../../../public").AoiVisibilityDelta[];
     Update5Hz(): void;
     Update1Hz(): void;
   }

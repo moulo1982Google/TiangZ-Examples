@@ -6,7 +6,7 @@ declare module "../../../login/LoginComponent" {
   interface LoginComponent {
     Login(request: C2S_Login): Promise<S2C_Login>;
     Register(request: C2S_Register): Promise<S2C_Register>;
-    CreateCharacter(request: C2S_CreateCharacter): Promise<import("#tiangz/module").S2C_CreateCharacter>;
+    CreateCharacter(request: C2S_CreateCharacter): Promise<import("../../../public").S2C_CreateCharacter>;
   }
 }
 

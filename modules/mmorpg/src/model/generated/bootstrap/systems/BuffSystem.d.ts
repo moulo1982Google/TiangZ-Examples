@@ -4,7 +4,7 @@ import type { BuffPublicState, BuffTransferState } from "../../../public";
 
 declare module "../../../../../../../../TiangZ/app/model/domains/buff/Buff" {
   interface Buff {
-    Refresh(request: import("#tiangz/module").BuffRefreshRequest): void;
+    Refresh(request: import("../../../public").BuffRefreshRequest): void;
     Snapshot(): BuffTransferState;
     PublicState(unitId: number): BuffPublicState;
     readonly ConfigId: number;

@@ -2,6 +2,7 @@ import { MapLifecycleEvents } from "../map/MapLifecycleEvents";
 import { NormalizePrivateRoster, SamePrivateRoster } from "./MapAdmission";
 import {
   Component,
+  RuntimeDataPackRegistry,
   EntryScene,
   Game,
   GlobalIdSystem,
@@ -86,6 +87,7 @@ import { ProgressionComponent } from "../progression/ProgressionComponent";
 import { GameConfigs, QuestStatus } from "../generated/facade";
 import { LocationProxy } from "../location/LocationProxy";
 import { MAP_HOST_LEASE_TIMEOUT_MS } from "./MapHostLease";
+import { MAP_DEPLOYMENT_PACK_ID, ResolveMapHostDeployment, type MapHostDeployment } from "./MapHostDeployment";
 import { UnitGateComponent } from "../map/UnitGateComponent";
 import {
   StaticMapInstanceId,
@@ -108,7 +110,12 @@ const monotonicNow = (): number => globalThis.performance?.now() ?? Date.now();
 // bump only this constant when a transferable Component changes the wire shape.
 const PLAYER_TRANSFER_SCHEMA_VERSION = 11;
 
-export class MapHostComponent extends Component<[repository: PlayerRepository]> {
+export class MapHostComponent extends Component<[repository: PlayerRepository, deployment?: MapHostDeployment]> {
+  private deployment!: MapHostDeployment;
+
+  /** 动态地图准入来自模块部署快照，注册组件与静态地图创建使用同一份结果。 / Registration and static map creation use the same module deployment snapshot. */
+  get AcceptDynamicMaps(): boolean { return this.deployment.acceptDynamicMaps; }
+
   private readonly admission = new MapAdmission();
   private readonly ownerGeneration = GlobalIdSystem.Instance.Next();
   private readonly maps = new Map<bigint, MapComponent>();
@@ -155,7 +162,8 @@ export class MapHostComponent extends Component<[repository: PlayerRepository]> 
   };
 
   /** 定期回收源进程宕机遗留的Prepare，以及已完成事务的短期幂等记录。 / Periodically reclaims prepares orphaned by a crashed source and short-lived completed idempotency records. */
-  protected override Awake(repository: PlayerRepository): void {
+  protected override Awake(repository: PlayerRepository, deployment?: MapHostDeployment): void {
+    this.deployment = deployment ?? ResolveMapHostDeployment(this.owner.self, RuntimeDataPackRegistry.Instance.TryGet(MAP_DEPLOYMENT_PACK_ID));
     this.repository = repository;
     this.location = new LocationProxy(this.owner.scenes);
     this.NewRepeatedTimer(10_000, "SweepIncomingTransfers");
@@ -167,7 +175,7 @@ export class MapHostComponent extends Component<[repository: PlayerRepository]> 
 
   /** 模块完成目录与容量装配后创建固定地图。 / Creates fixed maps after module catalog and capacity composition. */
   InitializeStaticMaps(): void {
-    for (const mapConfigId of this.owner.self.staticMapIds ?? []) {
+    for (const mapConfigId of this.deployment.staticMapIds) {
       this.CreateMap({ mapConfigId, mapInstanceId: StaticMapInstanceId(mapConfigId), dynamic: false });
     }
   }

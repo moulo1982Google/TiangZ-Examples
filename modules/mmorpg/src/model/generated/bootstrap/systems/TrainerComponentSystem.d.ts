@@ -4,7 +4,7 @@ import type { C2M_LearnTrainerSkill, M2C_LearnTrainerSkill } from "../../../publ
 
 declare module "../../../trainer/TrainerComponent" {
   interface TrainerComponent {
-    Learn(player: import("#tiangz/module").PlayerUnit, request: C2M_LearnTrainerSkill): Promise<M2C_LearnTrainerSkill>;
+    Learn(player: import("../../../public").PlayerUnit, request: C2M_LearnTrainerSkill): Promise<M2C_LearnTrainerSkill>;
   }
 }
 
