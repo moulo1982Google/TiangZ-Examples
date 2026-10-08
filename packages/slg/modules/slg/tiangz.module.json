@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "org.tiangz.slg external game module.",
   "engine": {
-    "minVersion": "0.7.0-rc.1",
+    "minVersion": "0.7.0",
     "maxVersionExclusive": "0.8.0"
   },
   "dependencies": [],

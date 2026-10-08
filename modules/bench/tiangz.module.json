@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "id": "org.tiangz.bench",
-  "version": "0.7.0-rc.1",
-  "engine": { "minVersion": "0.7.0-rc.1", "maxVersionExclusive": "0.8.0" },
-  "dependencies": [{ "id": "org.tiangz.mmorpg", "minVersion": "0.7.0-rc.1", "maxVersionExclusive": "0.8.0" }],
+  "version": "0.7.0",
+  "engine": { "minVersion": "0.7.0", "maxVersionExclusive": "0.8.0" },
+  "dependencies": [{ "id": "org.tiangz.mmorpg", "minVersion": "0.7.0", "maxVersionExclusive": "0.8.0" }],
   "entries": { "model": "src/model/index.ts", "hotfix": "src/hotfix/index.ts" }
 }
