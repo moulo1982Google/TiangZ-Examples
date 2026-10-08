@@ -6,7 +6,7 @@ import { modelTypes, requiredSystems } from "./generated/bootstrap";
 export * from "./public";
 defineGameModule({
   id: "org.tiangz.mmorpg",
-  version: "0.7.0-rc.1",
+  version: "0.7.0",
   modelExports: { ...Public, ...modelTypes },
   requiredSystems,
   processServices: {

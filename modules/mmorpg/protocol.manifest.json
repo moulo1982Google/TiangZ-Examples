@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "module": {
     "id": "org.tiangz.mmorpg",
-    "version": "0.7.0-rc.1"
+    "version": "0.7.0"
   },
   "source": "proto",
   "protoFiles": [
