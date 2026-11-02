@@ -1,4 +1,4 @@
-> 本轮发布：`v0.7.2`（套件 TiangZ 0.7.2）。根包 0.7.2；模块版本不变（MMORPG/Bench 0.7.0、SLG 0.1.0），引擎范围 `[0.7.0, 0.8.0)` 覆盖 0.7.2；MMORPG 与 SLG battlelab 的 Native crate 改为 deno_core 0.412（宿主校验版本一致），MMORPG Rust 锁随并列的 TiangZ 0.7.2 重新解析。说明见 [RELEASE-v0.7.2.md](RELEASE-v0.7.2.md)。
+> 本轮发布：`v0.7.3`（套件 TiangZ 0.7.8）。根包 0.7.3；模块版本不变（MMORPG/Bench 0.7.0、SLG 0.1.0），引擎范围 `[0.7.0, 0.8.0)` 覆盖 0.7.7；客户端 SDK 副本同步到 TiangZ 0.7.7（远端关闭时不再丢掉已收到的 RPC 回复，C# 远端关闭改由 `Update()` 处理）；依赖安全补丁（vitest/vite，MMORPG Rust 锁随并列的 TiangZ 0.7.7 重新解析，rustls、quinn-proto 等升到修复版本）。说明见 [RELEASE-v0.7.3.md](RELEASE-v0.7.3.md)。
 
 # TiangZ 示例工程
 
@@ -90,7 +90,7 @@ TiangZ-ModuleGame 与 TiangZ-WoW335 用模块根目录联接安装 MMORPG，仅�
 
 样例集版本为 `0.7.0`；MMORPG/Bench 模块为 `0.7.0`，SLG 模块仍为 `0.1.0`。在标准并列目录下重新执行各包构建后，受版本控制的生成文件应保持无差异。
 
-本版本使用 `TiangZ 0.7.2`、DBProxy SDK `v0.7.0`。MMORPG/Bench/SLG 模块的引擎范围均为 `>=0.7.0 <0.8.0`；SLG 保留自己的 `0.1.0` 版本，仅更新并验证宿主范围。不能把其他模块的范围自动放宽。
+本版本使用 `TiangZ 0.7.7`、DBProxy SDK `v0.7.0`（MMORPG Native crate 经并列的 TiangZ 间接使用其固定的 DBProxy 客户端 `v0.7.3`）。MMORPG/Bench/SLG 模块的引擎范围均为 `>=0.7.0 <0.8.0`；SLG 保留自己的 `0.1.0` 版本，仅更新并验证宿主范围。不能把其他模块的范围自动放宽。
 
 发行布局是同一父目录下的 `TiangZ/` 和 `TiangZ-Examples/`。MMORPG 的 Rust 声明直接依赖这个宿主；设置 `TIANGZ_ENGINE_ROOT` 不会改写 Cargo 路径，两者必须指向同一源码身份。换布局时先调整自己工程的显式依赖，用 Cargo 生成锁再构建，不关闭 Native 身份检查。
 
