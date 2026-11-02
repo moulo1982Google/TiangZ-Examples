@@ -1,6 +1,6 @@
 {
   "name": "tiangz-examples",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "private": true,
   "type": "module",
   "scripts": {
@@ -84,12 +84,12 @@
     "hello": "npm run server:build && npm run server:native-build && npm run server:start"
   },
   "devDependencies": {
-    "vitest": "5.0.0",
-    "@vitest/coverage-v8": "5.0.0",
     "@tiangz/dbproxy-sdk": "git+https://github.com/moulo1982Google/TiangZ-DBProxy.git#v0.7.0",
     "@types/node": "^26.1.0",
+    "@vitest/coverage-v8": "5.0.5",
     "esbuild": "^0.28.0",
     "pixi.js": "^8.9.2",
-    "typescript": "^6.0.0"
+    "typescript": "^6.0.0",
+    "vitest": "5.0.5"
   }
 }
