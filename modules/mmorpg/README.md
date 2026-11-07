@@ -1,6 +1,6 @@
 # MMORPG 可复用模块
 
-模块 ID：`org.tiangz.mmorpg`，版本 `0.6.0-alpha.0`。它不是 TiangZ Core，也不是必须安装的默认游戏。
+模块 ID：`org.tiangz.mmorpg`，版本 `0.7.0`，支持 TiangZ `>=0.7.0 <0.8.0`。它不是 TiangZ Core，也不是必须安装的默认游戏。
 
 ## 先看四处
 

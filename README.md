@@ -1,5 +1,7 @@
 > 本轮发布：`v0.7.3`（套件 TiangZ 0.7.8）。根包 0.7.3；模块版本不变（MMORPG/Bench 0.7.0、SLG 0.1.0），引擎范围 `[0.7.0, 0.8.0)` 覆盖 0.7.7；客户端 SDK 副本同步到 TiangZ 0.7.7（远端关闭时不再丢掉已收到的 RPC 回复，C# 远端关闭改由 `Update()` 处理）；依赖安全补丁（vitest/vite，MMORPG Rust 锁随并列的 TiangZ 0.7.7 重新解析，rustls、quinn-proto 等升到修复版本）。说明见 [RELEASE-v0.7.3.md](RELEASE-v0.7.3.md)。
 
+当前工作树的 MMORPG 使用 TiangZ 0.7.9、DBProxy TypeScript SDK `v0.7.6` 和 Cocos Creator 3.8.8；本地启动步骤见 [Cocos 3D 工程](clients/cocos_client3D_3.8.8/README.md)。
+
 # TiangZ 示例工程
 
 这里拥有独立的 SLG、MMORPG 示例包，以及可复用模块和客户端资源，不再依赖引擎内置 Demo。
@@ -88,13 +90,13 @@ TiangZ-ModuleGame 与 TiangZ-WoW335 用模块根目录联接安装 MMORPG，仅�
 
 ## 0.7 升级
 
-样例集版本为 `0.7.0`；MMORPG/Bench 模块为 `0.7.0`，SLG 模块仍为 `0.1.0`。在标准并列目录下重新执行各包构建后，受版本控制的生成文件应保持无差异。
+样例集版本为 `0.7.3`；MMORPG/Bench 模块为 `0.7.0`，SLG 模块仍为 `0.1.0`。在标准并列目录下重新执行各包构建后，受版本控制的生成文件应保持无差异。
 
-本版本使用 `TiangZ 0.7.7`、DBProxy SDK `v0.7.0`（MMORPG Native crate 经并列的 TiangZ 间接使用其固定的 DBProxy 客户端 `v0.7.3`）。MMORPG/Bench/SLG 模块的引擎范围均为 `>=0.7.0 <0.8.0`；SLG 保留自己的 `0.1.0` 版本，仅更新并验证宿主范围。不能把其他模块的范围自动放宽。
+当前工作树使用 `TiangZ 0.7.9`、DBProxy SDK `v0.7.6`；MMORPG Native crate 经并列的 TiangZ 使用其固定的 DBProxy 客户端 `v0.7.6`。MMORPG/Bench/SLG 模块的引擎范围均为 `>=0.7.0 <0.8.0`；SLG 保留自己的 `0.1.0` 版本。不能把其他模块的范围自动放宽。
 
 发行布局是同一父目录下的 `TiangZ/` 和 `TiangZ-Examples/`。MMORPG 的 Rust 声明直接依赖这个宿主；设置 `TIANGZ_ENGINE_ROOT` 不会改写 Cargo 路径，两者必须指向同一源码身份。换布局时先调整自己工程的显式依赖，用 Cargo 生成锁再构建，不关闭 Native 身份检查。
 
-本地候选 tag 尚未 push，首次安装应使用配套源码 bundle 与宿主的 `release:with-local-deps`，详见宿主 `docs/design/v0.7-release-candidate.md`。不要用 `npm install` 从远端已发布旧包替代候选依赖，再把结果记为 0.7 验收。获准推送对应 tag 后可直接使用正式 Git 地址和 `npm ci`。
+正式依赖固定到已发布的 Git tag；首次安装使用 `npm ci`。联合开发若使用本地依赖覆盖，不能把本地路径或未发布提交写入正式锁文件。
 
 升级时保留旧制品、配置和数据备份，停止旧 Process 后完整构建所选包并重启。Model、Native、模块宿主范围的变化不走 Hotfix。先运行 `check`、`smoke`；MMORPG 另运行 `npm test`、`test:native` 与客户端静态检查。回退必须同时回退宿主、模块、协议/配置与依赖锁；有生产数据 schema 变化时先验证向后兼容，不能直接覆盖或清空数据。
 

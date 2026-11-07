@@ -42,7 +42,6 @@ delete config.process.debug;
 config.process.observability = { health: { ip: "127.0.0.1", port: await freePort() } };
 for (const scene of config.scenes) {
   scene.port = await freePort();
-  if (scene.audience !== "inner") scene.protocol = "websocket";
 }
 const startup = path.join(temporary, "smoke.json");
 await writeFile(startup, JSON.stringify(config));
@@ -65,10 +64,12 @@ try {
   assert.equal(identity.process, config.process.name);
   assert.deepEqual(identity.dataPacks, expectedPacks);
   await writeFile(path.join(temporary, "runtime-identity.json"), JSON.stringify(identity, null, 2) + "\n");
-  const probe = spawn(process.execPath, [path.join(temporary, "client.cjs"), "websocket", "127.0.0.1", String(config.scenes[0].port), "1", "10000"], { cwd: temporary, windowsHide: true, stdio: "inherit" });
-  const timeout = setTimeout(() => probe.kill(), 45000);
-  const result = await new Promise((resolve, reject) => { probe.once("exit", resolve); probe.once("error", reject); }).finally(() => clearTimeout(timeout));
-  if (result !== 0) throw Error(`Client smoke failed (${result})\n${logs}`);
+  for (const mapId of [1, 100]) {
+    const probe = spawn(process.execPath, [path.join(temporary, "client.cjs"), "websocket", "127.0.0.1", String(config.scenes[0].port), String(mapId), "10000"], { cwd: temporary, windowsHide: true, stdio: "inherit" });
+    const timeout = setTimeout(() => probe.kill(), 45000);
+    const result = await new Promise((resolve, reject) => { probe.once("exit", resolve); probe.once("error", reject); }).finally(() => clearTimeout(timeout));
+    if (result !== 0) throw Error(`Client smoke failed for map ${mapId} (${result})\n${logs}`);
+  }
 } finally {
   if (!exited) child.stdin.end("shutdown\n");
   let forced = false;
@@ -79,7 +80,7 @@ try {
   console.log(`Isolated smoke artifacts: ${temporary}`);
   if (forced || exitCode !== 0) throw Error(`Server did not shut down normally (forced=${forced}, exit=${exitCode})\n${logs}`);
 }
-console.log("MMORPG module login/map/logout, runtime data identity and graceful shutdown passed in an isolated process.");
+console.log("MMORPG module login, map 1/100 movement and logout, runtime data identity and graceful shutdown passed in an isolated process.");
 async function freePort() {
   const socket = createServer();
   await new Promise(resolve => socket.listen(0, "127.0.0.1", resolve));

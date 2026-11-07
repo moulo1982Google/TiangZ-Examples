@@ -1,8 +1,9 @@
 import type { ClientTransportKind } from "../client_sdk/typescript/Core/Net/ClientTransport";
 import "../client_sdk/typescript/Core/Net/BrowserWebSocketTransport";
 import { LoginFlow } from "../client_sdk/typescript/Demo/LoginFlow";
-import { GateClient } from "../client_sdk/typescript/Generated/Model/demo/protocol/clients";
+import { GateClient, MapClient } from "../client_sdk/typescript/Generated/Model/demo/protocol/clients";
 import { ClientMessages } from "../client_sdk/typescript/Generated/Model/demo/protocol/messageDescriptors";
+import { GameConfigs, SpatialMode } from "../client_sdk/typescript/Generated/Config";
 import { RpcError } from "../client_sdk/typescript/Core/Protocol/RpcError";
 import assert from "node:assert/strict";
 import { RpcSocket } from "../client_sdk/typescript/Core/Net/RpcSocket";
@@ -42,6 +43,13 @@ async function main(): Promise<void> {
     if (result.login.selectedCharacterId !== registered.character.characterId) {
       throw new Error("Login did not keep the explicitly selected character");
     }
+    if (mapId === 100) {
+      const config = GameConfigs.MapConfig.Get(mapId);
+      assert.equal(config.spatialMode, SpatialMode.NavMesh3D);
+      assert.equal(result.enterMap.spatialMode, SpatialMode.NavMesh3D);
+      assert.equal(result.enterMap.navigationVersion, config.navigationVersion);
+      assert.equal(result.enterMap.navigationHash, config.navigationHash);
+    }
     const snapshotPromise = result.gateSocket.waitForMessage(ClientMessages.AoiDelta);
     await new GateClient(result.gateSocket).mapSnapshotReady({ unitId: result.enterMap.unitId });
     const snapshot = await snapshotPromise;
@@ -49,6 +57,12 @@ async function main(): Promise<void> {
     if (owner?.persistentId !== registered.character.characterId) {
       throw new Error("AOI owner snapshot did not preserve the selected CharacterId");
     }
+    const map = new MapClient(result.gateSocket);
+    const movement = { strafe: 0, yaw: 0, hasPositionSnapshot: false, positionX: 0, positionY: 0, positionZ: 0 };
+    const moving = await map.navigateInput({ ...movement, forward: 1, sequence: 1 });
+    assert.equal(moving.acknowledgedSequence, 1);
+    const stopped = await map.navigateInput({ ...movement, forward: 0, sequence: 2 });
+    assert.equal(stopped.acknowledgedSequence, 2);
     const gate = new GateClient(result.gateSocket);
     await assert.rejects(gate.logoutCharacter({ characterId: registered.character.characterId + 1n }));
     const released = await gate.logoutCharacter({ characterId: registered.character.characterId });
@@ -58,7 +72,7 @@ async function main(): Promise<void> {
     const switched = await enterGameWithStartupGrace(flow, account, password, mapId, second.character.characterId, startupGraceMs);
     assert.equal(switched.login.selectedCharacterId, second.character.characterId);
     await new GateClient(switched.gateSocket).logoutCharacter({ characterId: second.character.characterId });
-    console.log("explicit logout and immediate character switch passed");
+    console.log(`map ${mapId} movement, explicit logout and immediate character switch passed`);
     console.log("client SDK smoke passed", {
       transport,
       account: result.login.account,

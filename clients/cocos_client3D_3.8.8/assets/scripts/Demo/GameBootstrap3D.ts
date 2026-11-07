@@ -1097,7 +1097,7 @@ export class GameBootstrap3D extends Component {
     this.questCompleteInFlight.add(questConfigId);
     this.updateQuestHud();
     try {
-      const response = await this.mapClient.completeQuest({ questConfigId, npcUnitId });
+      const response = await this.mapClient.completeQuest({ questConfigId, npcUnitId, rewardChoiceId: 0 });
       this.quests.delete(response.questConfigId);
       this.completedQuestConfigIds.add(response.questConfigId);
       for (const item of response.rewardItems) this.ApplyItemSnapshot(item);
@@ -5723,6 +5723,10 @@ export class GameBootstrap3D extends Component {
         strafe,
         yaw: this.playerYaw,
         sequence,
+        hasPositionSnapshot: false,
+        positionX: 0,
+        positionY: 0,
+        positionZ: 0,
       });
       if (response.acknowledgedSequence !== sequence) return;
       this.acknowledgedSequence = response.acknowledgedSequence;
